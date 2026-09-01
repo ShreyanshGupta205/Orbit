@@ -1,36 +1,26 @@
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   AlertTriangle,
   Bell,
   ChevronDown,
   ChevronRight,
-  CircleDot,
   Crosshair,
-  Gauge,
   Globe2,
   Home,
-  Layers3,
   MapPin,
   Menu,
   Package,
   Search,
   Settings,
-  Truck,
   Car,
   FileText,
   UserRound,
   X,
-  ZoomIn,
-  ZoomOut,
   Activity,
   ShieldCheck,
   ShieldAlert,
   ArrowLeft
 } from "lucide-react";
-import { MapContainer, Marker, Popup, TileLayer, useMap } from "react-leaflet";
-import L from "leaflet";
-import { alerts as defaultAlerts, liveUpdates as defaultLiveUpdates, mapMarkers as defaultMapMarkers, stats, districtDataMap } from "./data";
-import type { Road, AlertItem } from "./data";
 import LiveMapView from "./LiveMapView";
 import IncidentsView from "./pages/IncidentsView";
 import VehiclesView from "./pages/VehiclesView";
@@ -41,17 +31,10 @@ import ProfileView from "./pages/ProfileView";
 import SettingsView from "./pages/SettingsView";
 import EvacuationView from "./pages/EvacuationView";
 import AdminView from "./pages/AdminView";
-import { useApi } from "../api/client";
+import AuthorityOverview from "./pages/AuthorityOverview";
+import WhatIfAnalysisView from "./pages/WhatIfAnalysisView";
 import { useAlerts } from "../hooks/useAlerts";
 import "./dashboard.css";
-
-function MapFlyTo({ center, zoom }: { center: [number, number]; zoom: number }) {
-  const map = useMap();
-  useEffect(() => {
-    map.flyTo(center, zoom, { duration: 1.2 });
-  }, [center, zoom, map]);
-  return null;
-}
 
 function timeAgo(dateString: string): string {
   if (!dateString) return "—";
@@ -72,7 +55,7 @@ function getInitials(name: string): string {
   if (parts.length >= 2 && parts[0] && parts[1]) {
     return (parts[0][0] + parts[1][0]).toUpperCase();
   }
-  return name.slice(0, 2).toUpperCase() || "OF";
+  return name.slice(0, 2).toUpperCase() || "R";
 }
 
 interface DashboardPageProps {
@@ -84,16 +67,17 @@ interface DashboardPageProps {
 }
 
 const navItems = [
-  { key: "overview", label: "Overview", icon: Home },
-  { key: "liveMap", label: "Live Map", icon: MapPin },
-  { key: "incidents", label: "Incidents", icon: AlertTriangle },
-  { key: "vehicles", label: "Vehicles", icon: Car },
-  { key: "shipments", label: "Shipments", icon: Package },
-  { key: "resilience", label: "Resilience", icon: ShieldCheck },
-  { key: "evacuation", label: "Evacuation", icon: Crosshair },
-  { key: "alerts", label: "Alerts", icon: Bell },
-  { key: "reports", label: "Reports", icon: FileText },
-  { key: "admin", label: "Admin Ops", icon: ShieldAlert },
+  { key: "Overview", label: "Overview", icon: Home },
+  { key: "Live Map", label: "Live Map", icon: MapPin },
+  { key: "Incidents", label: "Incidents", icon: AlertTriangle },
+  { key: "Vehicles", label: "Vehicles", icon: Car },
+  { key: "Shipments", label: "Shipments", icon: Package },
+  { key: "Resilience", label: "Resilience", icon: ShieldCheck },
+  { key: "Alerts", label: "Alerts", icon: Bell },
+  { key: "Reports", label: "Reports", icon: FileText },
+  { key: "Route Planner", label: "Route Planner", icon: Crosshair },
+  { key: "What If Analysis", label: "What If Analysis", icon: Activity },
+  { key: "Admin Ops", label: "Admin Ops", icon: ShieldAlert },
 ];
 
 type LanguageType = "English" | "Hindi" | "Assamese";
@@ -104,28 +88,12 @@ const translations: Record<LanguageType, Record<string, any>> = {
     neraSubtitle: <>North East<br />Resilience Assistant</>,
     overview: "Overview", profile: "Profile", liveMap: "Live Map", incidents: "Incidents", vehicles: "Vehicles",
     shipments: "Shipments", resilience: "Resilience", alerts: "Alerts", reports: "Reports", settings: "Settings",
-    search: "Search roads, incidents, vehicles...",
+    search: "Search roads, incidents, vehicles, districts...",
     searchLocation: "Search location...",
     noLocations: "No locations found",
     selectLocation: "Select location",
-    greeting: "Good evening, Manas.",
+    greeting: "Good evening, Rakshana.",
     happening: "Here's what's happening in your region today.",
-    criticalRoads: "Critical Roads", openIncidents: "Open Incidents",
-    vehiclesActive: "Vehicles Active", shipmentsToday: "Shipments Today",
-    mapLayers: "Map Layers", roadConditions: "Road Conditions", viewAll: "View all",
-    showLess: "Show less", liveStatus: "LIVE STATUS", viewUpdates: "View all updates",
-    activeAlerts: "Active Alerts", road: "Road", district: "District", status: "Status",
-    updated: "Updated", region: "Region", dummyMode: "Dummy data mode", language: "Language",
-    highRisk: "High Risk", normal: "Normal", moderate: "Moderate",
-    incidentReported: "Incident reported", nearMaibong: "Near Maibong",
-    trafficDisruption: "Traffic disruption", heavyVehicleBreakdown: "Heavy vehicle breakdown",
-    highRiskEvent: "High risk", landslideProbability: "Landslide probability",
-    roadClear: "Road clear", normalMovement: "Normal movement",
-    criticalBlockage: "Critical road blockage on NH-15", heavyRainfall: "Heavy rainfall warning",
-    movementRestored: "Vehicle movement restored",
-    roadConditionsLayer: "Road conditions", incidentsLayer: "Incidents",
-    vehiclesLayer: "Vehicles", weatherLayer: "Weather", dummyLive: "Dummy live data",
-    minAgo: "min ago",
     notifications: "Notifications", noNotifications: "No new notifications",
     profileMenu: "Profile", accountSettings: "Account settings", logout: "Log out",
     markRead: "Mark all as read", changeStatus: "Change status", saved: "Saved",
@@ -136,28 +104,12 @@ const translations: Record<LanguageType, Record<string, any>> = {
     neraSubtitle: <>उत्तर-पूर्व<br />लचीलापन सहायक</>,
     overview: "अवलोकन", profile: "प्रोफ़ाइल", liveMap: "लाइव मानचित्र", incidents: "घटनाएँ", vehicles: "वाहन",
     shipments: "शिपमेंट", resilience: "लचीलापन", alerts: "अलर्ट", settings: "सेटिंग्स",
-    search: "सड़क, घटनाएँ, वाहन खोजें...",
+    search: "सड़क, घटनाएँ, वाहन, जिले खोजें...",
     searchLocation: "स्थान खोजें...",
     noLocations: "कोई स्थान नहीं मिला",
     selectLocation: "स्थान चुनें",
-    greeting: "शुभ संध्या, मानस।",
+    greeting: "शुभ संध्या, रक्षणा।",
     happening: "आज आपके क्षेत्र में क्या हो रहा है, यहाँ देखें।",
-    criticalRoads: "गंभीर सड़कें", openIncidents: "खुली घटनाएँ",
-    vehiclesActive: "सक्रिय वाहन", shipmentsToday: "आज के शिपमेंट",
-    mapLayers: "मानचित्र परतें", roadConditions: "सड़क की स्थिति", viewAll: "सभी देखें",
-    showLess: "कम दिखाएँ", liveStatus: "लाइव स्थिति", viewUpdates: "सभी अपडेट देखें",
-    activeAlerts: "सक्रिय अलर्ट", road: "सड़क", district: "जिला", status: "स्थिति",
-    updated: "अपडेट", region: "क्षेत्र", dummyMode: "डमी डेटा मोड", language: "भाषा",
-    highRisk: "उच्च जोखिम", normal: "सामान्य", moderate: "मध्यम",
-    incidentReported: "घटना की सूचना", nearMaibong: "माईबोंग के पास",
-    trafficDisruption: "यातायात बाधित", heavyVehicleBreakdown: "भारी वाहन खराब",
-    highRiskEvent: "उच्च जोखिम", landslideProbability: "भूस्खलन की संभावना",
-    roadClear: "सड़क साफ", normalMovement: "सामान्य आवागमन",
-    criticalBlockage: "NH-15 पर गंभीर सड़क अवरोध", heavyRainfall: "भारी बारिश की चेतावनी",
-    movementRestored: "वाहन आवागमन बहाल",
-    roadConditionsLayer: "सड़क की स्थिति", incidentsLayer: "घटनाएँ",
-    vehiclesLayer: "वाहन", weatherLayer: "मौसम", dummyLive: "डमी लाइव डेटा",
-    minAgo: "मिनट पहले",
     notifications: "सूचनाएँ", noNotifications: "कोई नई सूचना नहीं",
     profileMenu: "प्रोफ़ाइल", accountSettings: "खाता सेटिंग्स", logout: "लॉग आउट",
     markRead: "सभी को पढ़ा हुआ करें", changeStatus: "स्थिति बदलें", saved: "सहेजा गया",
@@ -169,28 +121,12 @@ const translations: Record<LanguageType, Record<string, any>> = {
     neraSubtitle: <>উত্তৰ-পূব<br />স্থিতিস্থাপকতা সহায়ক</>,
     overview: "অভাৰভিউ", profile: "প্ৰফাইল", liveMap: "লাইভ মানচিত্ৰ", incidents: "ঘটনা", vehicles: "যানবাহন",
     shipments: "চালান", resilience: "স্থিতিস্থাপকতা", alerts: "সতৰ্কবাণী", reports: "প্ৰতিবেদন", settings: "ছেটিংছ",
-    search: "পথ, ঘটনা, যানবাহন বিচাৰক...",
+    search: "পথ, ঘটনা, যানবাহন, জিলা বিচাৰক...",
     searchLocation: "স্থান বিচাৰক...",
     noLocations: "কোনো স্থান পোৱা নগ'ল",
     selectLocation: "স্থান বাছনি কৰক",
-    greeting: "শুভ সন্ধিয়া, মানস।",
+    greeting: "শুভ সন্ধিয়া, ৰক্ষনা।",
     happening: "আজি আপোনাৰ অঞ্চলত কি হৈ আছে ইয়াত চাওক।",
-    criticalRoads: "গুৰুত্বপূৰ্ণ পথ", openIncidents: "মুকলি ঘটনা",
-    vehiclesActive: "সক্ৰিয় যানবাহন", shipmentsToday: "আজিৰ চালান",
-    mapLayers: "মানচিত্ৰৰ স্তৰ", roadConditions: "পথৰ অৱস্থা", viewAll: "সকলো চাওক",
-    showLess: "কম দেখুৱাওক", liveStatus: "লাইভ অৱস্থা", viewUpdates: "সকলো আপডেট চাওক",
-    activeAlerts: "সক্ৰিয় সতৰ্কবাণী", road: "পথ", district: "জিলা", status: "অৱস্থা",
-    updated: "আপডেট", region: "অঞ্চল", dummyMode: "ডামি ডাটা মোড", language: "ভাষা",
-    highRisk: "উচ্চ বিপদ", normal: "স্বাভাৱিক", moderate: "মধ্যম",
-    incidentReported: "ঘটনাৰ খবৰ", nearMaibong: "মাইবঙৰ ওচৰত",
-    trafficDisruption: "যাতায়াত ব্যাহত", heavyVehicleBreakdown: "গধুৰ যানবাহন বিকল",
-    highRiskEvent: "উচ্চ বিপদ", landslideProbability: "ভূমিস্খলনৰ সম্ভাৱনা",
-    roadClear: "পথ মুকলি", normalMovement: "স্বাভাৱিক চলাচল",
-    criticalBlockage: "NH-15 ত গুৰুত্বপূৰ্ণ পথ অৱৰোধ", heavyRainfall: "ভাৰী বৰষুণৰ সতৰ্কবাণী",
-    movementRestored: "যানবাহনৰ চলাচল পুনৰ স্থাপন",
-    roadConditionsLayer: "পথৰ অৱস্থা", incidentsLayer: "ঘটনা",
-    vehiclesLayer: "যানবাহন", weatherLayer: "বতৰ", dummyLive: "ডামি লাইভ ডাটা",
-    minAgo: "মিনিট আগতে",
     notifications: "জাননী", noNotifications: "নতুন জাননী নাই",
     profileMenu: "প্ৰফাইল", accountSettings: "একাউণ্ট ছেটিংছ", logout: "লগ আউট",
     markRead: "সকলো পঢ়া বুলি চিহ্নিত কৰক", changeStatus: "অৱস্থা সলনি কৰক", saved: "সংৰক্ষিত",
@@ -198,185 +134,42 @@ const translations: Record<LanguageType, Record<string, any>> = {
   }
 };
 
-const translationsData: Record<string, string> = {
-  "Incident reported": "incidentReported",
-  "Near Maibong": "nearMaibong",
-  "Traffic disruption": "trafficDisruption",
-  "Heavy vehicle breakdown": "heavyVehicleBreakdown",
-  "High risk": "highRiskEvent",
-  "Landslide probability": "landslideProbability",
-  "Road clear": "roadClear",
-  "Normal movement": "normalMovement"
-};
-
 const locations = [
-  { key: "Dima Hasao", en: "Dima Hasao", hi: "दिमा हसाओ", as: "ডিমা হাছাও" },
-  { key: "Karbi Anglong", en: "Karbi Anglong", hi: "কাৰ্বি আংলং", as: "কাৰ্বি আংলং" },
-  { key: "Kamrup", en: "Kamrup", hi: "कामरूप", as: "কামৰূপ" },
-  { key: "West Karbi Anglong", en: "West Karbi Anglong", hi: "पश्चिम कार्बी आंगलोंग", as: "পশ্চিম কাৰ্বি আংলং" },
-  { key: "Haflong", en: "Haflong", hi: "हाफलोंग", as: "হাফলং" },
-  { key: "Maibong", en: "Maibong", hi: "माईबोंग", as: "মাইবং" },
-  { key: "Lumding", en: "Lumding", hi: "लुमडिंग", as: "লুমডিং" },
-  { key: "Golaghat", en: "Golaghat", hi: "गोलाघाट", as: "গোলাঘাট" }
+  { key: "Dima Hasao", en: "Dima Hasao, Assam", hi: "दिमा हसाओ, असम", as: "ডিমা হাছাও, অসম" },
+  { key: "Karbi Anglong", en: "Karbi Anglong, Assam", hi: "কাৰ্বি আংলং, অসম", as: "কাৰ্বি আংলং, অসম" },
+  { key: "Kamrup", en: "Kamrup, Assam", hi: "कामरूप, असम", as: "কামৰূপ, অসম" },
+  { key: "West Karbi Anglong", en: "West Karbi Anglong, Assam", hi: "पश्चिम कार्बी आंगलोंग, असम", as: "পশ্চিম কাৰ্বি আংলং, অসম" },
+  { key: "Haflong", en: "Haflong, Assam", hi: "हाफलोंग, असम", as: "হাফলং, অসম" },
+  { key: "Maibong", en: "Maibong, Assam", hi: "माईबोंग, असम", as: "মাইবং, অসম" },
+  { key: "Lumding", en: "Lumding, Assam", hi: "लुमडिंग, असम", as: "লুমডিং, অসম" },
+  { key: "Golaghat", en: "Golaghat, Assam", hi: "गोलाघाट, असम", as: "গোলাঘাট, অসম" }
 ];
 
 function locationName(location: string, language: LanguageType) {
   const item = locations.find(l => l.key === location);
-  if (!item) return location;
+  if (!item) return `${location}, Assam`;
   return language === "Hindi" ? item.hi : language === "Assamese" ? item.as : item.en;
-}
-
-const getAge = (age: string, t: any) => {
-  const n = age.match(/\d+/)?.[0] || age;
-  return `${n} ${t.minAgo}`;
-};
-
-function makeIcon(type: "danger" | "warning" | "success" | "vehicle") {
-  const styles = {
-    danger: { bg: "#ef5b5b", symbol: "!" },
-    warning: { bg: "#f5b832", symbol: "!" },
-    success: { bg: "#27885f", symbol: "✓" },
-    vehicle: { bg: "#2b8a68", symbol: "●" }
-  };
-  const s = styles[type] || styles.success;
-  return L.divIcon({
-    className: "custom-map-marker",
-    html: `<span style="background:${s.bg}">${s.symbol}</span>`,
-    iconSize: [30, 30],
-    iconAnchor: [15, 15],
-    popupAnchor: [0, -12]
-  });
-}
-
-function MapControls() {
-  const map = useMap();
-  return (
-    <div className="map-controls">
-      <button aria-label="Zoom in" onClick={() => map.zoomIn()}><ZoomIn size={19} /></button>
-      <button aria-label="Zoom out" onClick={() => map.zoomOut()}><ZoomOut size={19} /></button>
-      <button aria-label="Locate" onClick={() => map.setView([25.62, 93.2], 9)}><Crosshair size={19} /></button>
-    </div>
-  );
-}
-
-function StatIcon({ kind }: { kind: "road" | "incident" | "vehicle" | "shipment" }) {
-  if (kind === "incident") return <AlertTriangle size={22} />;
-  if (kind === "vehicle") return <Truck size={22} />;
-  if (kind === "shipment") return <Package size={22} />;
-  return <Activity size={22} />;
 }
 
 export default function DashboardPage({
   onBackToHome,
-  userName = "Manas",
-  userEmail = "manas.officer@assam.gov.in",
-  userRole = "District Disaster Management Officer",
+  userName = "Rakshana",
+  userEmail = "rakshana.authority@nera.gov.in",
+  userRole = "Authority / Analyst",
   onUpdateUser
 }: DashboardPageProps) {
-  const [active, setActive] = useState("Live Map");
+  const [active, setActive] = useState("Overview");
   const [mobileOpen, setMobileOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [location, setLocation] = useState("Dima Hasao");
   const [language, setLanguage] = useState<LanguageType>("English");
   const [locationOpen, setLocationOpen] = useState(false);
   const [locationSearch, setLocationSearch] = useState("");
-  const [layers, setLayers] = useState(false);
-  const [showAllRoads, setShowAllRoads] = useState(false);
-  const [showAllAlerts, setShowAllAlerts] = useState(false);
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [layerState, setLayerState] = useState({
-    roads: true,
-    incidents: true,
-    vehicles: true,
-    weather: false
-  });
-  const currentDistrictData = useMemo(() => {
-    return districtDataMap[location] || districtDataMap["Dima Hasao"];
-  }, [location]);
 
-  const { apiFetch } = useApi();
   const { alerts: realAlerts, unreadCount, connectionState, toastAlert, dismissToast, markAsRead, acknowledgeAlert } = useAlerts();
-
-  const [roadData, setRoadData] = useState<Road[]>(currentDistrictData.roads);
-
-  // ——— Real API data state ———
-  const [apiSummary, setApiSummary] = useState<{
-    criticalRoads: number; highRiskRoads: number; activeIncidents: number;
-    activeVehicles: number; shipmentsToday: number;
-  } | null>(null);
-  const [apiRoads, setApiRoads] = useState<Road[] | null>(null);
-  const [apiAlerts, setApiAlerts] = useState<AlertItem[] | null>(null);
-
-  // Fetch risk summary from API
-  const fetchSummary = useCallback(async () => {
-    try {
-      const res = await apiFetch("/api/risk/summary");
-      if (res.ok) {
-        const json = await res.json();
-        setApiSummary(json.data);
-      }
-    } catch { /* keep static fallback */ }
-  }, [apiFetch]);
-
-  // Fetch prioritized roads from API
-  const fetchRoads = useCallback(async () => {
-    try {
-      const res = await apiFetch("/api/risk/priority?limit=20&sort=risk");
-      if (res.ok) {
-        const json = await res.json();
-        const mapped: Road[] = (json.data || []).map((r: any) => ({
-          road: r.name,
-          district: r.districtName || "Unknown",
-          status: r.priority === "critical" ? "High Risk" as const
-               : r.priority === "high" ? "High Risk" as const
-               : r.priority === "moderate" ? "Moderate" as const
-               : "Normal" as const,
-          updated: r.riskUpdatedAt ? timeAgo(r.riskUpdatedAt) : "—",
-          lat: r.geometry?.coordinates?.[0]?.[1] || 0,
-          lng: r.geometry?.coordinates?.[0]?.[0] || 0,
-        }));
-        setApiRoads(mapped);
-      }
-    } catch { /* keep static fallback */ }
-  }, [apiFetch]);
-
-  // Fetch alerts from API
-  const fetchAlerts = useCallback(async () => {
-    try {
-      const res = await apiFetch("/api/alerts?limit=5");
-      if (res.ok) {
-        const json = await res.json();
-        const mapped: AlertItem[] = (json.data || []).map((a: any) => ({
-          title: a.message || a.type,
-          location: a.road_name || a.facility_name || "Region",
-          age: a.created_at ? timeAgo(a.created_at) : "—",
-          type: a.severity === "critical" || a.severity === "high" ? "danger" as const
-             : a.severity === "medium" ? "warning" as const
-             : "success" as const,
-        }));
-        setApiAlerts(mapped);
-      }
-    } catch { /* keep static fallback */ }
-  }, [apiFetch]);
-
-  // Fetch on mount
-  useEffect(() => {
-    fetchSummary();
-    fetchRoads();
-    fetchAlerts();
-  }, [fetchSummary, fetchRoads, fetchAlerts]);
-
-  // Sync roads: prefer API data, fall back to static district data
-  useEffect(() => {
-    if (apiRoads && apiRoads.length > 0) {
-      setRoadData(apiRoads);
-    } else {
-      const data = districtDataMap[location] || districtDataMap["Dima Hasao"];
-      setRoadData(data.roads);
-    }
-  }, [location, apiRoads]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -420,86 +213,10 @@ export default function DashboardPage({
     Resilience: t.resilience,
     Alerts: t.alerts,
     Reports: t.reports,
+    "Route Planner": "Route Planner",
+    "What If Analysis": "What If Analysis",
+    "Admin Ops": "Admin Ops",
     Settings: t.settings
-  };
-
-  const translatedRoads = useMemo(() => roadData.map(r => ({
-    ...r,
-    statusText: r.status === "High Risk" ? t.highRisk : r.status === "Moderate" ? t.moderate : t.normal
-  })), [roadData, t]);
-
-  const visibleMarkers = useMemo(() => {
-    const sourceMarkers = currentDistrictData.markers || defaultMapMarkers;
-    return sourceMarkers.filter(marker => layerState[marker.layer]);
-  }, [currentDistrictData, layerState]);
-
-  // Dashboard stats: prefer live API data, fall back to static
-  const dynamicStats = useMemo(() => {
-    if (apiSummary) {
-      return {
-        criticalRoads: apiSummary.criticalRoads,
-        openIncidents: apiSummary.activeIncidents,
-        vehiclesActive: apiSummary.activeVehicles,
-        shipmentsToday: apiSummary.shipmentsToday
-      };
-    }
-    // Fallback to static data
-    const districtStats = currentDistrictData.stats || stats;
-    const critical = roadData.filter(r => r.status === "High Risk").length;
-    const incidents = visibleMarkers.filter(m => m.layer === "incidents").length + (districtStats[1]?.value ? parseInt(districtStats[1].value, 10) : 10);
-    const vehicles = layerState.vehicles ? parseInt(districtStats.find(s => s.icon === "vehicle")?.value || "24", 10) : 0;
-    const shipments = parseInt(districtStats.find(s => s.icon === "shipment")?.value || "42", 10);
-    return {
-      criticalRoads: critical,
-      openIncidents: incidents,
-      vehiclesActive: vehicles,
-      shipmentsToday: shipments
-    };
-  }, [apiSummary, currentDistrictData, roadData, visibleMarkers, layerState]);
-
-  const filteredRoads = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    const source = showAllRoads ? translatedRoads : translatedRoads.slice(0, 3);
-    if (!q) return source;
-    return source.filter(r => `${r.road} ${r.district} ${r.status} ${r.statusText}`.toLowerCase().includes(q));
-  }, [search, showAllRoads, translatedRoads]);
-
-  const filteredUpdates = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    const sourceUpdates = currentDistrictData.liveUpdates || defaultLiveUpdates;
-    const translated = sourceUpdates.map(u => ({
-      ...u,
-      titleText: t[translationsData[u.title]] || u.title,
-      detailText: t[translationsData[u.detail]] || u.detail
-    }));
-    if (!q) return translated;
-    return translated.filter(u => `${u.road} ${u.titleText} ${u.detailText}`.toLowerCase().includes(q));
-  }, [currentDistrictData, search, t]);
-
-  const displayedAlerts: AlertItem[] = useMemo(() => {
-    const sourceAlerts = (apiAlerts && apiAlerts.length > 0) ? apiAlerts : (currentDistrictData.alerts || defaultAlerts);
-    return showAllAlerts ? sourceAlerts : sourceAlerts.slice(0, 2);
-  }, [apiAlerts, currentDistrictData, showAllAlerts]);
-
-  const markerLabel = (label: string) => {
-    if (label === "NH-15 — Landslide risk") return `NH-15 — ${t.landslideProbability}`;
-    if (label === "SH-22 — Incident reported") return `SH-22 — ${t.incidentReported}`;
-    if (label === "NH-27 — Traffic disruption") return `NH-27 — ${t.trafficDisruption}`;
-    if (label === "Heavy rainfall warning") return t.heavyRainfall;
-    if (label === "NH-37 — Road clear") return `NH-37 — ${t.roadClear}`;
-    return `${t.vehiclesActive}`;
-  };
-
-  const changeRoadStatus = (roadName: string, nextStatus: "High Risk" | "Moderate" | "Normal") => {
-    setRoadData(current => current.map(road =>
-      road.road === roadName
-        ? { ...road, status: nextStatus, updated: "just now" }
-        : road
-    ));
-  };
-
-  const toggleLayer = (layer: "roads" | "incidents" | "vehicles" | "weather") => {
-    setLayerState(current => ({ ...current, [layer]: !current[layer] }));
   };
 
   return (
@@ -537,12 +254,12 @@ export default function DashboardPage({
               onClick={() => { setActive(label); setMobileOpen(false); }}
             >
               <Icon size={19} strokeWidth={1.8} />
-              <span>{navLabel[label]}</span>
+              <span>{navLabel[label] || label}</span>
             </button>
           ))}
         </nav>
 
-        <div className="sidebar-bottom">
+        <div className="sidebar-bottom" style={{ marginTop: "auto", borderTop: "1px solid #f1f5f9", paddingTop: "10px", display: "flex", flexDirection: "column", gap: "6px" }}>
           <button
             className={`dashboard-nav-item ${active === "Settings" ? "active" : ""}`}
             onClick={() => setActive("Settings")}
@@ -551,17 +268,30 @@ export default function DashboardPage({
             <span>{t.settings}</span>
           </button>
 
-          <button
-            className={`dashboard-nav-item ${active === "Profile" ? "active" : ""}`}
+          <div
             onClick={() => setActive("Profile")}
-            style={{ justifyContent: "space-between" }}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              padding: "8px 10px",
+              borderRadius: "8px",
+              cursor: "pointer",
+              background: active === "Profile" ? "#edf7f1" : "transparent",
+              transition: "background 0.15s ease"
+            }}
           >
-            <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
-              <UserRound size={19} strokeWidth={1.8} />
-              <span>{t.profile}</span>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <div style={{ width: "32px", height: "32px", borderRadius: "50%", background: "#f1f5f9", border: "1px solid #cbd5e1", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <UserRound size={16} color="#475569" />
+              </div>
+              <div style={{ display: "flex", flexDirection: "column" }}>
+                <strong style={{ fontSize: "12.5px", color: "#0f172a", lineHeight: "1.2" }}>{userName}</strong>
+                <span style={{ fontSize: "10.5px", color: "#64748b" }}>{userRole}</span>
+              </div>
             </div>
-            <ChevronRight size={15} style={{ color: "#7a8893" }} />
-          </button>
+            <ChevronRight size={14} color="#94a3b8" />
+          </div>
         </div>
       </aside>
 
@@ -659,7 +389,7 @@ export default function DashboardPage({
                 }}
                 aria-expanded={notificationOpen}
               >
-                <Bell size={21} />{unreadCount > 0 && <span>{unreadCount}</span>}
+                <Bell size={21} />{unreadCount > 0 ? <span>{unreadCount}</span> : <span>3</span>}
               </button>
               {notificationOpen && (
                 <div className="notification-menu">
@@ -782,7 +512,14 @@ export default function DashboardPage({
               </button>
             </div>
           )}
-          {active === "Live Map" ? (
+          {active === "Overview" ? (
+            <AuthorityOverview
+              userName={userName === "Manas" || !userName ? "Rakshana" : userName}
+              userRole={userRole || "Authority / Analyst"}
+              selectedDistrict={location}
+              onNavigateTab={(tab) => setActive(tab)}
+            />
+          ) : active === "Live Map" ? (
             <LiveMapView selectedDistrict={location} onDistrictChange={setLocation} />
           ) : active === "Incidents" ? (
             <IncidentsView selectedDistrict={location} />
@@ -792,10 +529,14 @@ export default function DashboardPage({
             <ShipmentsView selectedDistrict={location} />
           ) : active === "Resilience" ? (
             <ResilienceView selectedDistrict={location} onNavigateToReports={() => setActive("Reports")} />
-          ) : active === "Evacuation" ? (
-            <EvacuationView selectedDistrict={location} />
+          ) : active === "Alerts" ? (
+            <ReportsView selectedDistrict={location} />
           ) : active === "Reports" ? (
             <ReportsView selectedDistrict={location} />
+          ) : active === "Route Planner" || active === "Evacuation" ? (
+            <EvacuationView selectedDistrict={location} />
+          ) : active === "What If Analysis" ? (
+            <WhatIfAnalysisView selectedDistrict={location} />
           ) : active === "Admin Ops" ? (
             <AdminView />
           ) : active === "Settings" ? (
@@ -817,193 +558,12 @@ export default function DashboardPage({
               onUpdateUser={onUpdateUser}
             />
           ) : (
-            <>
-              <div className="greeting">
-                <h1>{t.greeting}, {userName}</h1>
-                <p>{t.happening}</p>
-              </div>
-
-              <div className="stats-grid">
-                {stats.map((stat) => {
-                  const labels: Record<string, string> = {
-                    "Critical Roads": t.criticalRoads,
-                    "Open Incidents": t.openIncidents,
-                    "Vehicles Active": t.vehiclesActive,
-                    "Shipments Today": t.shipmentsToday
-                  };
-                  return (
-                    <div className="stat-card" key={stat.label}>
-                      <div className={`stat-icon ${stat.tone}`}><StatIcon kind={stat.icon} /></div>
-                      <div>
-                        <strong>
-                          {stat.label === "Critical Roads" ? String(dynamicStats.criticalRoads).padStart(2, "0") :
-                            stat.label === "Open Incidents" ? String(dynamicStats.openIncidents).padStart(2, "0") :
-                            stat.label === "Vehicles Active" ? String(dynamicStats.vehiclesActive).padStart(2, "0") :
-                            String(dynamicStats.shipmentsToday).padStart(2, "0")}
-                        </strong>
-                        <span>{labels[stat.label]}</span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              <div className="dashboard-grid">
-                <section className="map-card">
-                  <div className="map-wrapper">
-                    <MapContainer
-                      center={currentDistrictData.center}
-                      zoom={currentDistrictData.zoom}
-                      minZoom={7}
-                      maxZoom={13}
-                      scrollWheelZoom={true}
-                      zoomControl={false}
-                      attributionControl={true}
-                    >
-                      <MapFlyTo center={currentDistrictData.center} zoom={currentDistrictData.zoom} />
-                      <TileLayer
-                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                      />
-                      {visibleMarkers.map(m => (
-                        <Marker key={m.id} position={[m.lat, m.lng]} icon={makeIcon(m.type)}>
-                          <Popup><strong>{markerLabel(m.label)}</strong><br />{t.dummyLive}</Popup>
-                        </Marker>
-                      ))}
-                      <MapControls />
-                    </MapContainer>
-
-                    <button className="layers-button" onClick={() => setLayers(v => !v)}>
-                      <Layers3 size={18} />{t.mapLayers}<ChevronDown size={15} />
-                    </button>
-
-                    {layers && (
-                      <div className="layers-menu">
-                        <label>
-                          <input type="checkbox" checked={layerState.roads} onChange={() => toggleLayer("roads")} /> {t.roadConditionsLayer}
-                        </label>
-                        <label>
-                          <input type="checkbox" checked={layerState.incidents} onChange={() => toggleLayer("incidents")} /> {t.incidentsLayer}
-                        </label>
-                        <label>
-                          <input type="checkbox" checked={layerState.vehicles} onChange={() => toggleLayer("vehicles")} /> {t.vehiclesLayer}
-                        </label>
-                        <label>
-                          <input type="checkbox" checked={layerState.weather} onChange={() => toggleLayer("weather")} /> {t.weatherLayer}
-                        </label>
-                      </div>
-                    )}
-
-                    <div className="map-legend">
-                      <span><i className="dot green" /> Normal</span>
-                      <span><i className="dot yellow" /> Alert</span>
-                      <span><i className="dot red" /> High Risk</span>
-                      <Truck size={15} />
-                      <Gauge size={15} />
-                      <Package size={15} />
-                    </div>
-                  </div>
-                </section>
-
-                <section className="live-card dashboard-card">
-                  <div className="dashboard-card-title">
-                    <h2><span className="live-dot" />{t.liveStatus}</h2>
-                  </div>
-                  <div className="timeline">
-                    {filteredUpdates.map(item => (
-                      <div className="timeline-item" key={item.time + item.road}>
-                        <div className="timeline-time">{item.time}</div>
-                        <div className={`timeline-marker ${item.type}`}></div>
-                        <div className="timeline-body">
-                          <div className="timeline-road">{item.road}<ChevronRight size={15} /></div>
-                          <strong>{item.titleText}</strong>
-                          <span>{item.detailText}</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <button className="view-updates" onClick={() => setSearch("")}>
-                    {t.viewUpdates}<ChevronRight size={16} />
-                  </button>
-                </section>
-              </div>
-
-              <div className="bottom-grid">
-                <section className="table-card dashboard-card">
-                  <div className="section-head">
-                    <h2>{t.roadConditions}</h2>
-                    <button onClick={() => setShowAllRoads(v => !v)}>
-                      {showAllRoads ? t.showLess : t.viewAll}
-                    </button>
-                  </div>
-                  <div className="table-wrap">
-                    <table>
-                      <thead>
-                        <tr>
-                          <th>{t.road}</th>
-                          <th>{t.district}</th>
-                          <th>{t.status}</th>
-                          <th>{t.updated}</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {filteredRoads.map(row => (
-                          <tr key={row.road}>
-                            <td><strong>{row.road}</strong></td>
-                            <td>{row.district}</td>
-                            <td>
-                              <select
-                                className={`status status-select ${row.status.toLowerCase().replace(" ", "-")}`}
-                                value={row.status}
-                                onChange={e => changeRoadStatus(row.road, e.target.value as any)}
-                                aria-label={`${t.changeStatus}: ${row.road}`}
-                              >
-                                <option value="High Risk">{t.highRisk}</option>
-                                <option value="Moderate">{t.moderate}</option>
-                                <option value="Normal">{t.normal}</option>
-                              </select>
-                            </td>
-                            <td>{row.updated}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </section>
-
-                <section className="alerts-card dashboard-card">
-                  <div className="section-head">
-                    <h2>{t.activeAlerts}</h2>
-                    <button onClick={() => setShowAllAlerts(v => !v)}>
-                      {showAllAlerts ? t.showLess : t.viewAll}
-                    </button>
-                  </div>
-                  <div className="alerts-list">
-                    {displayedAlerts.map(alert => {
-                      const title = alert.title.includes("Critical") ? t.criticalBlockage :
-                        alert.title.includes("Heavy") ? t.heavyRainfall : t.movementRestored;
-                      return (
-                        <div className="alert-row" key={alert.title}>
-                          <div className={`alert-icon ${alert.type}`}>
-                            {alert.type === "danger" ? <AlertTriangle size={18} /> : alert.type === "warning" ? <AlertTriangle size={18} /> : <CircleDot size={18} />}
-                          </div>
-                          <div className="alert-content">
-                            <strong>{title}</strong>
-                            <span>{alert.location}</span>
-                          </div>
-                          <time>{getAge(alert.age, t)}</time>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </section>
-              </div>
-
-              <footer className="dashboard-footer">
-                <span>NERA Dashboard • {t.dummyMode}</span>
-                <span>{t.region}: {locationName(location, language)} • {t.language}: {language}</span>
-              </footer>
-            </>
+            <AuthorityOverview
+              userName={userName === "Manas" || !userName ? "Rakshana" : userName}
+              userRole={userRole || "Authority / Analyst"}
+              selectedDistrict={location}
+              onNavigateTab={(tab) => setActive(tab)}
+            />
           )}
         </section>
       </main>
