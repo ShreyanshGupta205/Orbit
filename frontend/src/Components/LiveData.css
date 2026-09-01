@@ -1,0 +1,617 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+.live-data-section {
+  width: 100%;
+  padding: 54px 0 64px;
+  background: #fff;
+  font-family: "Inter", sans-serif;
+}
+
+.live-data-container {
+  width: min(1400px, calc(100% - 120px));
+  margin: 0 auto;
+}
+
+/* Heading */
+.live-heading {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.live-heading h2 {
+  margin: 0;
+  color: #07153d;
+  font-size: 30px;
+  line-height: 1.15;
+  font-weight: 700;
+  letter-spacing: -0.8px;
+}
+
+.live-heading p {
+  margin: 7px 0 0;
+  color: #68758c;
+  font-size: 12px;
+  line-height: 1.4;
+  letter-spacing: -0.1px;
+  font-weight: 500;
+}
+
+/* Four top cards */
+.live-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.live-card {
+  min-height: 465px;
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid #e5eaf0;
+  border-radius: 12px;
+  box-shadow:
+    0 2px 6px rgba(15, 37, 62, 0.035),
+    0 8px 20px rgba(15, 37, 62, 0.025);
+  padding: 21px;
+}
+
+.live-card h3 {
+  margin: 0 0 18px;
+  color: #07153d;
+  font-size: 14px;
+  line-height: 1.2;
+  letter-spacing: -0.2px;
+  font-weight: 700;
+}
+
+/* Legend */
+.legend {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 18px;
+  white-space: nowrap;
+}
+
+.legend span {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #526078;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.1px;
+}
+
+.legend i {
+  width: 12px;
+  height: 12px;
+  display: inline-block;
+  border-radius: 50%;
+}
+
+.legend i.good { background: #0a9657; }
+.legend i.moderate { background: #f0a900; }
+.legend i.poor { background: #f58b00; }
+.legend i.critical { background: #ef4d28; }
+.legend i.heavy { background: #f47700; }
+
+/* Map */
+.live-map {
+  width: 100%;
+  height: 275px;
+  position: relative;
+  overflow: hidden;
+  border-radius: 10px;
+  background: linear-gradient(140deg, #eef3f0 0%, #f7f7f3 45%, #edf2ed 100%);
+}
+
+.map-terrain {
+  position: absolute;
+  border-radius: 50%;
+  opacity: 0.42;
+  background:
+    repeating-linear-gradient(
+      145deg,
+      transparent 0 8px,
+      rgba(158, 174, 164, 0.18) 9px,
+      transparent 10px
+    );
+}
+
+.terrain-one {
+  width: 250px;
+  height: 180px;
+  top: -40px;
+  left: -40px;
+}
+
+.terrain-two {
+  width: 260px;
+  height: 190px;
+  bottom: -50px;
+  right: -40px;
+}
+
+.terrain-three {
+  width: 160px;
+  height: 130px;
+  top: 80px;
+  left: 120px;
+}
+
+.map-road {
+  position: absolute;
+  height: 3px;
+  border-radius: 10px;
+  background: #e6bd58;
+  transform-origin: left center;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.8);
+}
+
+.map-road-1 {
+  width: 310px;
+  top: 50px;
+  left: -30px;
+  transform: rotate(58deg);
+}
+
+.map-road-2 {
+  width: 250px;
+  top: 210px;
+  left: 70px;
+  transform: rotate(-50deg);
+}
+
+.map-road-3 {
+  width: 220px;
+  top: 135px;
+  left: 10px;
+  transform: rotate(-5deg);
+  background: #dcae45;
+}
+
+.map-road-4 {
+  width: 200px;
+  top: 220px;
+  left: 160px;
+  transform: rotate(-20deg);
+}
+
+.road-card .map-road-1 { background: #4fa775; }
+.road-card .map-road-2 { background: #5aaa7c; }
+
+.map-river {
+  position: absolute;
+  width: 5px;
+  background: #8bc7df;
+  border-radius: 100%;
+  transform: rotate(30deg);
+}
+
+.river-one {
+  height: 330px;
+  left: 115px;
+  top: -30px;
+}
+
+.river-two {
+  height: 260px;
+  right: 50px;
+  top: -30px;
+  transform: rotate(-38deg);
+}
+
+/* Road map labels/markers */
+.road-label {
+  position: absolute;
+  color: #777f85;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.assam {
+  left: 48%;
+  top: 38%;
+}
+
+.guwahati {
+  left: 57%;
+  top: 66%;
+  font-size: 10px;
+}
+
+.map-warning {
+  position: absolute;
+  width: 13px;
+  height: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #ef4d28;
+  color: #ef4d28;
+  background: #fff;
+  border-radius: 50%;
+  font-size: 8px;
+  font-weight: 700;
+}
+
+.warning-one { top: 30%; right: 14%; }
+.warning-two { top: 59%; right: 25%; }
+.warning-three { bottom: 13%; left: 43%; }
+
+.blue-marker {
+  position: absolute;
+  width: 13px;
+  height: 13px;
+  left: 25%;
+  top: 37%;
+  border-radius: 4px;
+  background: #075cc5;
+}
+
+/* Descriptions */
+.card-description {
+  margin: 16px 0 0;
+  color: #4f5d73;
+  font-size: 14px;
+  line-height: 1.55;
+  font-weight: 500;
+  line-height: 1.55;
+  letter-spacing: -0.05px;
+}
+
+/* Incidents */
+.incident-list {
+  border-top: 2px solid #edf0f3;
+}
+
+.incident-row {
+  min-height: 67px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 2px solid #edf0f3;
+}
+
+.incident-icon {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #00864e;
+}
+
+.incident-icon.yellow { color: #e99c00; }
+
+.incident-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 4px;
+}
+
+.incident-info strong {
+  color: #1b2946;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.15px;
+}
+
+.incident-info span {
+  color: #68758c;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: -0.05px;
+}
+
+.incident-row time {
+  color: #68758c;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.live-outline-button {
+    font-family: "Inter", sans-serif;
+    margin-top: 50px;
+    height: 38px;
+    padding: 0 18px;
+    background: #fff;
+    color: #087653;
+    border: 2px solid #54a882;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 800;
+    cursor: pointer;
+    line-height: 1;
+    letter-spacing: -0.05px;
+}
+
+/* Vehicle */
+.vehicle-marker {
+  position: absolute;
+  width: 21px;
+  height: 21px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #07804d;
+  color: #fff;
+  border-radius: 4px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.12);
+}
+
+.marker-one { left: 27%; top: 28%; }
+.marker-two { left: 52%; top: 58%; }
+.marker-three { right: 17%; top: 34%; }
+
+.vehicle-popup {
+  position: absolute;
+  right: 17px;
+  bottom: 45px;
+  width: 140px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 5px 20px rgba(25, 48, 67, 0.15);
+}
+
+.vehicle-popup strong {
+  color: #1b2946;
+  font-size: 9px;
+  line-height: 1.2;
+  font-weight: 700;
+}
+
+.vehicle-popup span {
+  color: #66738a;
+  font-size: 8px;
+  line-height: 1.2;
+  font-weight: 500;
+}
+
+.vehicle-popup b { color: #168158; font-weight: 600;}
+
+/* Weather */
+.weather-card .live-map {
+  background: linear-gradient(135deg, #eef5ef, #f4f5ed);
+}
+
+.weather-zone {
+  position: absolute;
+  width: 260px;
+  height: 350px;
+  right: -40px;
+  top: -30px;
+  transform: rotate(35deg);
+  background: rgba(58, 202, 149, 0.43);
+  border-radius: 60%;
+  filter: blur(1px);
+}
+
+.zone-two {
+  width: 180px;
+  height: 230px;
+  right: 70px;
+  top: 50px;
+  background: rgba(95, 218, 172, 0.28);
+}
+
+.weather-marker {
+  position: absolute;
+  right: 48%;
+  top: 50%;
+  color: #0d8c5a;
+  font-size: 28px;
+}
+
+.weather-legend {
+  margin-top: 16px;
+  margin-bottom: 0;
+  gap: 13px;
+}
+
+/* Smart Alerts + AI Resilience */
+.live-intelligence-grid {
+  width: 76% ;
+  margin: 28px auto 0;
+
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.live-intelligence-card {
+  min-height: 292px;
+  display: flex;
+  align-items: flex-start;
+  gap: 22px;
+  padding: 25px 27px;
+  background: #fff;
+  border: 1px solid #e5eaf0;
+  border-radius: 12px;
+  box-shadow:
+    0 2px 6px rgba(15, 37, 62, 0.035),
+    0 8px 20px rgba(15, 37, 62, 0.025);
+}
+
+.live-intelligence-icon {
+  width: 58px;
+  height: 58px;
+  flex: 0 0 58px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+}
+
+.live-intelligence-icon svg {
+  width: 30px;
+  height: 30px;
+}
+
+.alert-icon {
+  color: #075bc9;
+  background: #e8f0ff;
+}
+
+.ai-icon {
+  color: #00834e;
+  background: #e5f6ec;
+}
+
+.live-intelligence-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.live-intelligence-body h3 {
+  margin: 3px 0 17px;
+  color: #07153d;
+  font-size: 15px;
+  line-height: 1.25;
+  font-weight: 700;
+  letter-spacing: -0.25px;
+
+}
+
+.live-check-list {
+
+
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.live-check-list > div {
+  display: flex;
+  align-items: center;  
+  gap: 10px;
+  color: #34435d;
+  font-size: 12px;
+  line-height: 1.35;
+  font-weight: 600;
+  letter-spacing: -0.1px;
+}
+
+.live-check-list svg {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+  color: #00834e;
+  stroke-width: 3;
+}
+
+.live-intelligence-body p {
+  margin: 18px 0;
+  color: #69758a;
+  font-size: 12px;
+  line-height: 1.55;
+  font-weight: 600;
+  letter-spacing: -0.05px;
+}
+
+.live-action-btn {
+  height: 38px;
+  padding: 0 17px;
+  border: 1.5px solid #91cbb2;
+  border-radius: 6px;
+  background: #fff;
+  color: #087653;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.live-outline-button:hover,
+.live-action-btn:hover {
+  background: #edf9f3;
+  border-color: #087653;
+  transform: translateY(-1px);
+}
+
+/* Responsive */
+@media (max-width: 1100px) {
+  .live-data-container {
+    width: min(100% - 48px, 980px);
+  }
+
+  .live-cards-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .live-data-section {
+    padding: 48px 0 56px;
+  }
+
+  .live-data-container {
+    width: calc(100% - 28px);
+  }
+
+  .live-heading h2 {
+    font-size: 26px;
+  }
+
+  .live-heading p {
+    font-size: 11px;
+  }
+
+  .live-cards-grid,
+  .live-intelligence-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .live-card {
+    min-height: auto;
+  }
+
+  .live-map {
+    height: 250px;
+  }
+
+  .live-intelligence-card {
+    min-height: auto;
+    padding: 22px;
+  }
+}
+
+@media (max-width: 480px) {
+  .legend {
+    gap: 9px;
+    flex-wrap: wrap;
+  }
+
+  .legend span {
+    font-size: 7px;
+  }
+
+  .live-intelligence-card {
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .live-intelligence-icon {
+    width: 52px;
+    height: 52px;
+    flex-basis: 52px;
+  }
+
+  .live-intelligence-icon svg {
+    width: 26px;
+    height: 26px;
+  }
+
+  .live-intelligence-body h3 {
+    font-size: 14px;
+  }
+}

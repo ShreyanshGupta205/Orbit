@@ -1,0 +1,156 @@
+.integrations-section {
+  padding: 28px 0 30px;
+  background: #ffffff;
+}
+
+.integrations-container {
+  width: min(1370px, calc(100% - 100px));
+  margin: 0 auto;
+
+  padding: 28px 70px 30px;
+
+  border: 1px solid #e4eaf0;
+  border-radius: 11px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 2px 7px rgba(20, 45, 65, 0.025),
+    0 8px 22px rgba(20, 45, 65, 0.02);
+}
+
+
+/* Heading */
+
+.integrations-heading {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.integrations-heading h2 {
+  margin: 0;
+
+  color: #07153d;
+
+  font-size: 28px;
+  line-height: 1.15;
+
+  font-weight: 700;
+
+  letter-spacing: -0.6px;
+}
+
+.integrations-heading p {
+  margin: 7px 0 0;
+
+  color: #68758c;
+
+  font-size: 14px;
+  line-height: 1.4;
+
+  font-weight: 500;
+}
+
+
+/* Integration items */
+
+.integration-list {
+  display: grid;
+
+  grid-template-columns: repeat(6, 1fr);
+
+  align-items: center;
+
+  gap: 25px;
+}
+
+.integration-item {
+  display: flex;
+  align-items: center;
+
+  gap: 13px;
+
+  min-width: 0;
+}
+
+.integration-icon {
+  width: 48px;
+  height: 48px;
+
+  flex: 0 0 38px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  color: #008653;
+
+  background: #e7f6ed;
+}
+
+.integration-icon svg {
+  width: 29px;
+  height: 29px;
+
+  stroke-width: 1.8;
+}
+
+.integration-text {
+  display: flex;
+  flex-direction: column;
+
+  gap: 5px;
+}
+
+.integration-text strong,
+.integration-text span {
+  color: #536077;
+
+  font-size: 12px;
+
+  line-height: 1.15;
+
+  font-weight: 700;
+}
+
+.integration-text strong {
+  color: #536077;
+}
+
+.integration-text span {
+  font-weight: 500;
+}
+
+
+/* Responsive */
+
+@media (max-width: 1100px) {
+  .integrations-container {
+    width: calc(100% - 50px);
+    padding: 28px 35px;
+  }
+
+  .integration-list {
+    grid-template-columns: repeat(3, 1fr);
+    row-gap: 25px;
+  }
+}
+
+@media (max-width: 650px) {
+  .integrations-container {
+    width: calc(100% - 28px);
+    padding: 25px 20px;
+  }
+
+  .integration-list {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 420px) {
+  .integration-list {
+    grid-template-columns: 1fr;
+  }
+}
