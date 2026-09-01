@@ -20,7 +20,9 @@ import {
   ShieldCheck,
   ShieldAlert,
   ArrowLeft,
-  LogOut
+  LogOut,
+  Camera,
+  RefreshCw
 } from "lucide-react";
 import LiveMapView from "./LiveMapView";
 import IncidentsView from "./pages/IncidentsView";
@@ -34,23 +36,13 @@ import EvacuationView from "./pages/EvacuationView";
 import AdminView from "./pages/AdminView";
 import AuthorityOverview from "./pages/AuthorityOverview";
 import LogisticsOverview from "./pages/LogisticsOverview";
+import FieldAgentOverview from "./pages/FieldAgentOverview";
+import FieldAgentMediaView from "./pages/FieldAgentMediaView";
+import FieldAgentSyncView from "./pages/FieldAgentSyncView";
+import FieldAgentReportView from "./pages/FieldAgentReportView";
 import WhatIfAnalysisView from "./pages/WhatIfAnalysisView";
 import { useAlerts } from "../hooks/useAlerts";
 import "./dashboard.css";
-
-function timeAgo(dateString: string): string {
-  if (!dateString) return "—";
-  const date = new Date(dateString);
-  const diffSec = Math.floor((Date.now() - date.getTime()) / 1000);
-  if (isNaN(diffSec) || diffSec < 0) return "just now";
-  if (diffSec < 60) return `${diffSec}s ago`;
-  const diffMin = Math.floor(diffSec / 60);
-  if (diffMin < 60) return `${diffMin} min ago`;
-  const diffHr = Math.floor(diffMin / 60);
-  if (diffHr < 24) return `${diffHr}h ago`;
-  const diffDay = Math.floor(diffHr / 24);
-  return `${diffDay}d ago`;
-}
 
 function getInitials(name: string): string {
   const parts = name.trim().split(/\s+/);
@@ -89,6 +81,13 @@ const logisticsNavItems = [
   { key: "Shipments", label: "Shipments", icon: Package },
 ];
 
+const fieldAgentNavItems = [
+  { key: "Home", label: "Home", icon: Home },
+  { key: "Incident Report", label: "Incident Report", icon: FileText },
+  { key: "Media", label: "Media", icon: Camera },
+  { key: "Offline / Sync", label: "Offline / Sync", icon: RefreshCw },
+];
+
 type LanguageType = "English" | "Hindi" | "Assamese";
 
 const translations: Record<LanguageType, Record<string, any>> = {
@@ -97,6 +96,7 @@ const translations: Record<LanguageType, Record<string, any>> = {
     neraSubtitle: <>North East<br />Resilience Assistant</>,
     overview: "Overview", profile: "Profile", liveMap: "Live Map", incidents: "Incidents", vehicles: "Vehicles",
     shipments: "Shipments", resilience: "Resilience", alerts: "Alerts", reports: "Reports", settings: "Settings",
+    home: "Home", media: "Media", incidentReport: "Incident Report", offlineSync: "Offline / Sync",
     search: "Search roads, incidents, vehicles, districts...",
     searchLogistics: "Search vehicles, shipments, routes, districts...",
     searchLocation: "Search location...",
@@ -114,6 +114,7 @@ const translations: Record<LanguageType, Record<string, any>> = {
     neraSubtitle: <>उत्तर-पूर्व<br />लचीलापन सहायक</>,
     overview: "अवलोकन", profile: "प्रोफ़ाइल", liveMap: "लाइव मानचित्र", incidents: "घटनाएँ", vehicles: "वाहन",
     shipments: "शिपमेंट", resilience: "लचीलापन", alerts: "अलर्ट", settings: "सेटिंग्स",
+    home: "होम", media: "मीडिया", incidentReport: "घटना रिपोर्ट", offlineSync: "ऑफलाइन / सिंक",
     search: "सड़क, घटनाएँ, वाहन, जिले खोजें...",
     searchLogistics: "वाहन, शिपमेंट, मार्ग, जिले खोजें...",
     searchLocation: "स्थान खोजें...",
@@ -132,6 +133,7 @@ const translations: Record<LanguageType, Record<string, any>> = {
     neraSubtitle: <>উত্তৰ-পূব<br />স্থিতিস্থাপকতা সহায়ক</>,
     overview: "অভাৰভিউ", profile: "প্ৰফাইল", liveMap: "লাইভ মানচিত্ৰ", incidents: "ঘটনা", vehicles: "যানবাহন",
     shipments: "চালান", resilience: "স্থিতিস্থাপকতা", alerts: "সতৰ্কবাণী", reports: "প্ৰতিবেদন", settings: "ছেটিংছ",
+    home: "গৃহ", media: "মিডিয়া", incidentReport: "ঘটনা প্ৰতিবেদন", offlineSync: "অফলাইন / ছিংক",
     search: "পথ, ঘটনা, যানবাহন, জিলা বিচাৰক...",
     searchLogistics: "যানবাহন, চালান, পথ, জিলা বিচাৰক...",
     searchLocation: "স্থান বিচাৰক...",
@@ -166,15 +168,18 @@ function locationName(location: string, language: LanguageType) {
 
 export default function DashboardPage({
   onBackToHome,
-  userName = "Rahul Sharma",
-  userEmail = "rahul.logistics@nera.gov.in",
-  userRole = "Logistics Operator",
+  userName = "Rahul",
+  userEmail = "rahul.field@nera.gov.in",
+  userRole = "Field Agent",
   onUpdateUser
 }: DashboardPageProps) {
-  const [active, setActive] = useState("Overview");
+  const isFieldAgent = userRole.toLowerCase().includes("field");
+  const isLogistics = userRole.toLowerCase().includes("logistics");
+
+  const [active, setActive] = useState(isFieldAgent ? "Home" : "Overview");
   const [mobileOpen, setMobileOpen] = useState(false);
   const [search, setSearch] = useState("");
-  const [location, setLocation] = useState(userRole.toLowerCase().includes("logistics") ? "Assam" : "Dima Hasao");
+  const [location, setLocation] = useState(isLogistics ? "Assam" : "Dima Hasao");
   const [language, setLanguage] = useState<LanguageType>("English");
   const [locationOpen, setLocationOpen] = useState(false);
   const [locationSearch, setLocationSearch] = useState("");
@@ -182,10 +187,9 @@ export default function DashboardPage({
   const [profileOpen, setProfileOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
-  const isLogistics = userRole.toLowerCase().includes("logistics");
-  const navItems = isLogistics ? logisticsNavItems : authorityNavItems;
+  const navItems = isFieldAgent ? fieldAgentNavItems : isLogistics ? logisticsNavItems : authorityNavItems;
 
-  const { alerts: realAlerts, unreadCount, connectionState, toastAlert, dismissToast, markAsRead, acknowledgeAlert } = useAlerts();
+  const { unreadCount, toastAlert, dismissToast } = useAlerts();
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -221,6 +225,7 @@ export default function DashboardPage({
 
   const navLabel: Record<string, string> = {
     Overview: t.overview,
+    Home: t.home || "Home",
     Profile: t.profile,
     "Live Map": t.liveMap,
     Incidents: t.incidents,
@@ -229,6 +234,9 @@ export default function DashboardPage({
     Resilience: t.resilience,
     Alerts: t.alerts,
     Reports: t.reports,
+    "Incident Report": t.incidentReport || "Incident Report",
+    Media: t.media || "Media",
+    "Offline / Sync": t.offlineSync || "Offline / Sync",
     "Route Planner": "Route Planner",
     "What If Analysis": "What If Analysis",
     "Admin Ops": "Admin Ops",
@@ -243,7 +251,7 @@ export default function DashboardPage({
         email: `${name.toLowerCase().replace(" ", ".")}@nera.gov.in`
       });
     }
-    setActive("Overview");
+    setActive(roleName.toLowerCase().includes("field") ? "Home" : "Overview");
     setProfileOpen(false);
   };
 
@@ -278,7 +286,7 @@ export default function DashboardPage({
           {navItems.map(({ label, icon: Icon }) => (
             <button
               key={label}
-              className={`dashboard-nav-item ${active === label ? "active" : ""}`}
+              className={`dashboard-nav-item ${(active === label || (active === "Overview" && label === "Home") || (active === "Home" && label === "Overview")) ? "active" : ""}`}
               onClick={() => { setActive(label); setMobileOpen(false); }}
             >
               <Icon size={19} strokeWidth={1.8} />
@@ -288,7 +296,31 @@ export default function DashboardPage({
         </nav>
 
         {/* Sidebar Bottom (Role-aware) */}
-        {isLogistics ? (
+        {isFieldAgent ? (
+          <div
+            onClick={() => setActive("Profile")}
+            style={{
+              marginTop: "auto",
+              borderTop: "1px solid #f1f5f9",
+              padding: "12px 10px",
+              borderRadius: "8px",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: "10px",
+              background: active === "Profile" ? "#edf7f1" : "transparent"
+            }}
+          >
+            <div style={{ width: "34px", height: "34px", borderRadius: "50%", background: "#f1f5f9", border: "1px solid #cbd5e1", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <UserRound size={17} color="#475569" />
+            </div>
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              <strong style={{ fontSize: "12.5px", color: "#0f172a", lineHeight: "1.2" }}>{userName}</strong>
+              <span style={{ fontSize: "10.5px", color: "#16a34a", fontWeight: "600" }}>Home</span>
+              <span style={{ fontSize: "10px", color: "#64748b" }}>Field Agent • NH-27 | Guwahati</span>
+            </div>
+          </div>
+        ) : isLogistics ? (
           <div className="sidebar-bottom" style={{ marginTop: "auto", borderTop: "1px solid #f1f5f9", paddingTop: "12px" }}>
             <button
               className="dashboard-nav-item"
@@ -353,142 +385,123 @@ export default function DashboardPage({
             <Menu size={22} />
           </button>
 
-          <div className="search-box">
-            <Search size={19} />
-            <input
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              placeholder={isLogistics ? t.searchLogistics : t.search}
-            />
-            {search && <button onClick={() => setSearch("")}><X size={16} /></button>}
-          </div>
-
-          <div className="top-actions">
-            <div className={`location-picker ${locationOpen ? "open" : ""}`} onClick={e => e.stopPropagation()}>
-              <button
-                className="select-box location-trigger"
-                onClick={() => {
-                  setLocationOpen(v => !v);
-                  setLocationSearch("");
-                }}
-                aria-expanded={locationOpen}
-              >
-                <MapPin size={18} />
-                <span>{isLogistics ? `Select District • ${locationName(location, language)}` : locationName(location, language)}</span>
-                <ChevronDown size={15} />
-              </button>
-
-              {locationOpen && (
-                <div className="location-menu">
-                  <div className="location-search">
-                    <Search size={16} />
-                    <input
-                      autoFocus
-                      value={locationSearch}
-                      onChange={e => setLocationSearch(e.target.value)}
-                      placeholder={t.searchLocation}
-                    />
-                    {locationSearch && (
-                      <button onClick={() => setLocationSearch("")}><X size={14} /></button>
-                    )}
-                  </div>
-
-                  <div className="location-results">
-                    {filteredLocations.length ? filteredLocations.map(item => (
-                      <button
-                        key={item.key}
-                        className={`location-option ${location === item.key ? "selected" : ""}`}
-                        onClick={() => {
-                          setLocation(item.key);
-                          setLocationOpen(false);
-                          setLocationSearch("");
-                        }}
-                      >
-                        <MapPin size={16} />
-                        <span>{locationName(item.key, language)}</span>
-                        {location === item.key && <span className="location-check">✓</span>}
-                      </button>
-                    )) : (
-                      <div className="no-locations">{t.noLocations}</div>
-                    )}
-                  </div>
-                </div>
-              )}
+          {isFieldAgent ? (
+            /* Field Agent Header Style */
+            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <span style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", fontWeight: "700", color: "#166534", background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "4px 12px", borderRadius: "16px" }}>
+                <span style={{ width: "7px", height: "7px", borderRadius: "50%", background: "#16a34a" }} /> Synced
+              </span>
             </div>
+          ) : (
+            <div className="search-box">
+              <Search size={19} />
+              <input
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                placeholder={isLogistics ? t.searchLogistics : t.search}
+              />
+              {search && <button onClick={() => setSearch("")}><X size={16} /></button>}
+            </div>
+          )}
 
-            {!isLogistics && (
-              <label className="select-box language">
-                <Globe2 size={17} />
-                <select value={language} onChange={e => setLanguage(e.target.value as LanguageType)}>
-                  <option value="English">English</option>
-                  <option value="Hindi">Hindi</option>
-                  <option value="Assamese">Assamese</option>
-                </select>
-                <ChevronDown size={15} />
-              </label>
-            )}
+          <div className="top-actions" style={{ marginLeft: "auto" }}>
+            {isFieldAgent ? (
+              /* Field Agent right timestamp & bell */
+              <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+                <span style={{ fontSize: "13px", fontWeight: "600", color: "#475569" }}>
+                  20 May 2025, 10:32 AM
+                </span>
+                <button
+                  className="notification"
+                  onClick={() => {
+                    setNotificationOpen(v => !v);
+                    setProfileOpen(false);
+                  }}
+                  aria-expanded={notificationOpen}
+                >
+                  <Bell size={21} /><span>5</span>
+                </button>
+              </div>
+            ) : (
+              <>
+                <div className={`location-picker ${locationOpen ? "open" : ""}`} onClick={e => e.stopPropagation()}>
+                  <button
+                    className="select-box location-trigger"
+                    onClick={() => {
+                      setLocationOpen(v => !v);
+                      setLocationSearch("");
+                    }}
+                    aria-expanded={locationOpen}
+                  >
+                    <MapPin size={18} />
+                    <span>{isLogistics ? `Select District • ${locationName(location, language)}` : locationName(location, language)}</span>
+                    <ChevronDown size={15} />
+                  </button>
 
-            <div className={`notification-wrap ${notificationOpen ? "open" : ""}`} onClick={e => e.stopPropagation()}>
-              <button
-                className="notification"
-                onClick={() => {
-                  setNotificationOpen(v => !v);
-                  setProfileOpen(false);
-                }}
-                aria-expanded={notificationOpen}
-              >
-                <Bell size={21} />{unreadCount > 0 ? <span>{unreadCount}</span> : <span>3</span>}
-              </button>
-              {notificationOpen && (
-                <div className="notification-menu">
-                  <div className="popover-head">
-                    <strong>{t.notifications}</strong>
-                    <span className={`sse-status ${connectionState}`} style={{ fontSize: "11px", opacity: 0.8 }}>
-                      {connectionState === "connected" ? "● Live" : "○ Syncing"}
-                    </span>
-                  </div>
-                  {realAlerts.length > 0 ? (
-                    <div className="notification-list" style={{ maxHeight: "320px", overflowY: "auto" }}>
-                      {realAlerts.map(alert => (
-                        <div
-                          className={`notification-item ${alert.is_read ? "read" : "unread"}`}
-                          key={alert.id}
-                          onClick={() => {
-                            if (!alert.is_read) markAsRead(alert.id);
-                            if (alert.road_segment_id || alert.type === "incident") {
-                              setActive("Incidents");
-                              setNotificationOpen(false);
-                            }
-                          }}
-                          style={{ cursor: "pointer", padding: "10px 12px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}
-                        >
-                          <div className={`notif-dot ${alert.severity === "critical" || alert.severity === "high" ? "danger" : alert.severity === "medium" ? "warning" : "success"}`}></div>
-                          <div style={{ flex: 1 }}>
-                            <strong style={{ fontSize: "13px", display: "block" }}>{alert.message}</strong>
-                            <span style={{ fontSize: "11px", opacity: 0.7 }}>
-                              {alert.road_name || alert.facility_name || alert.district_name || "Region"} • {timeAgo(alert.created_at)}
-                            </span>
-                          </div>
-                          {!alert.is_acknowledged && (
-                            <button
-                              style={{ fontSize: "10px", padding: "2px 6px", background: "#2563eb", color: "#fff", border: "none", borderRadius: "4px", cursor: "pointer" }}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                acknowledgeAlert(alert.id);
-                              }}
-                            >
-                              Ack
-                            </button>
-                          )}
-                        </div>
-                      ))}
+                  {locationOpen && (
+                    <div className="location-menu">
+                      <div className="location-search">
+                        <Search size={16} />
+                        <input
+                          autoFocus
+                          value={locationSearch}
+                          onChange={e => setLocationSearch(e.target.value)}
+                          placeholder={t.searchLocation}
+                        />
+                        {locationSearch && (
+                          <button onClick={() => setLocationSearch("")}><X size={14} /></button>
+                        )}
+                      </div>
+
+                      <div className="location-results">
+                        {filteredLocations.length ? filteredLocations.map(item => (
+                          <button
+                            key={item.key}
+                            className={`location-option ${location === item.key ? "selected" : ""}`}
+                            onClick={() => {
+                              setLocation(item.key);
+                              setLocationOpen(false);
+                              setLocationSearch("");
+                            }}
+                          >
+                            <MapPin size={16} />
+                            <span>{locationName(item.key, language)}</span>
+                            {location === item.key && <span className="location-check">✓</span>}
+                          </button>
+                        )) : (
+                          <div className="no-locations">{t.noLocations}</div>
+                        )}
+                      </div>
                     </div>
-                  ) : (
-                    <div className="empty-popover">{t.noNotifications}</div>
                   )}
                 </div>
-              )}
-            </div>
+
+                {!isLogistics && (
+                  <label className="select-box language">
+                    <Globe2 size={17} />
+                    <select value={language} onChange={e => setLanguage(e.target.value as LanguageType)}>
+                      <option value="English">English</option>
+                      <option value="Hindi">Hindi</option>
+                      <option value="Assamese">Assamese</option>
+                    </select>
+                    <ChevronDown size={15} />
+                  </label>
+                )}
+
+                <div className={`notification-wrap ${notificationOpen ? "open" : ""}`} onClick={e => e.stopPropagation()}>
+                  <button
+                    className="notification"
+                    onClick={() => {
+                      setNotificationOpen(v => !v);
+                      setProfileOpen(false);
+                    }}
+                    aria-expanded={notificationOpen}
+                  >
+                    <Bell size={21} />{unreadCount > 0 ? <span>{unreadCount}</span> : <span>3</span>}
+                  </button>
+                </div>
+              </>
+            )}
 
             <div className={`profile-wrap ${profileOpen ? "open" : ""}`} onClick={e => e.stopPropagation()}>
               <button
@@ -517,6 +530,13 @@ export default function DashboardPage({
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4px", marginTop: "6px" }}>
                       <button
                         type="button"
+                        onClick={() => handleRoleSwitch("Field Agent", "Rahul")}
+                        style={{ padding: "4px 6px", fontSize: "11px", borderRadius: "4px", border: "1px solid #cbd5e1", background: isFieldAgent ? "#dcfce7" : "#fff", color: isFieldAgent ? "#166534" : "#334155", fontWeight: 600 }}
+                      >
+                        👷 Field Agent
+                      </button>
+                      <button
+                        type="button"
                         onClick={() => handleRoleSwitch("Logistics Operator", "Rahul Sharma")}
                         style={{ padding: "4px 6px", fontSize: "11px", borderRadius: "4px", border: "1px solid #cbd5e1", background: isLogistics ? "#dcfce7" : "#fff", color: isLogistics ? "#166534" : "#334155", fontWeight: 600 }}
                       >
@@ -525,7 +545,7 @@ export default function DashboardPage({
                       <button
                         type="button"
                         onClick={() => handleRoleSwitch("Authority / Analyst", "Rakshana")}
-                        style={{ padding: "4px 6px", fontSize: "11px", borderRadius: "4px", border: "1px solid #cbd5e1", background: !isLogistics ? "#dcfce7" : "#fff", color: !isLogistics ? "#166534" : "#334155", fontWeight: 600 }}
+                        style={{ padding: "4px 6px", fontSize: "11px", borderRadius: "4px", border: "1px solid #cbd5e1", background: (!isLogistics && !isFieldAgent) ? "#dcfce7" : "#fff", color: (!isLogistics && !isFieldAgent) ? "#166534" : "#334155", fontWeight: 600 }}
                       >
                         🚨 Authority
                       </button>
@@ -582,8 +602,17 @@ export default function DashboardPage({
               </button>
             </div>
           )}
-          {active === "Overview" ? (
-            isLogistics ? (
+
+          {/* Role & Tab Routing */}
+          {active === "Home" || active === "Overview" ? (
+            isFieldAgent ? (
+              <FieldAgentOverview
+                userName={userName}
+                currentRoute="NH-27"
+                onNavigateTab={(tab) => setActive(tab)}
+                onOpenReportModal={() => setActive("Incident Report")}
+              />
+            ) : isLogistics ? (
               <LogisticsOverview
                 userName={userName}
                 userRole={userRole}
@@ -598,6 +627,12 @@ export default function DashboardPage({
                 onNavigateTab={(tab) => setActive(tab)}
               />
             )
+          ) : active === "Incident Report" ? (
+            <FieldAgentReportView onSuccess={() => setActive("Home")} />
+          ) : active === "Media" ? (
+            <FieldAgentMediaView />
+          ) : active === "Offline / Sync" ? (
+            <FieldAgentSyncView />
           ) : active === "Live Map" ? (
             <LiveMapView selectedDistrict={location} onDistrictChange={setLocation} />
           ) : active === "Incidents" ? (
@@ -635,6 +670,12 @@ export default function DashboardPage({
               userRole={userRole}
               onUpdateLocation={setLocation}
               onUpdateUser={onUpdateUser}
+            />
+          ) : isFieldAgent ? (
+            <FieldAgentOverview
+              userName={userName}
+              currentRoute="NH-27"
+              onNavigateTab={(tab) => setActive(tab)}
             />
           ) : isLogistics ? (
             <LogisticsOverview
