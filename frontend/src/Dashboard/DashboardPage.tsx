@@ -15,6 +15,8 @@ import {
   Car,
   FileText,
   UserRound,
+  Users,
+  Server,
   X,
   Activity,
   ShieldCheck,
@@ -46,6 +48,11 @@ import CitizenOverview from "./pages/CitizenOverview";
 import CitizenReportView from "./pages/CitizenReportView";
 import CitizenMyReportsView from "./pages/CitizenMyReportsView";
 import CitizenEmergencyMapView from "./pages/CitizenEmergencyMapView";
+import AdminOverview from "./pages/AdminOverview";
+import AdminRolesView from "./pages/AdminRolesView";
+import AdminAuditLogsView from "./pages/AdminAuditLogsView";
+import AdminUsersView from "./pages/AdminUsersView";
+import AdminSystemsView from "./pages/AdminSystemsView";
 import WhatIfAnalysisView from "./pages/WhatIfAnalysisView";
 import { useAlerts } from "../hooks/useAlerts";
 import "./dashboard.css";
@@ -55,7 +62,7 @@ function getInitials(name: string): string {
   if (parts.length >= 2 && parts[0] && parts[1]) {
     return (parts[0][0] + parts[1][0]).toUpperCase();
   }
-  return name.slice(0, 2).toUpperCase() || "R";
+  return name.slice(0, 2).toUpperCase() || "A";
 }
 
 interface DashboardPageProps {
@@ -101,6 +108,14 @@ const citizenNavItems = [
   { key: "Emergency Map", label: "Emergency Map", icon: Compass },
 ];
 
+const adminNavItems = [
+  { key: "Dashboard", label: "Dashboard", icon: Home },
+  { key: "Users", label: "Users", icon: Users },
+  { key: "Roles", label: "Roles", icon: ShieldCheck },
+  { key: "Systems", label: "Systems", icon: Server },
+  { key: "Audit Logs", label: "Audit Logs", icon: FileText },
+];
+
 type LanguageType = "English" | "Hindi" | "Assamese";
 
 const translations: Record<LanguageType, Record<string, any>> = {
@@ -111,9 +126,11 @@ const translations: Record<LanguageType, Record<string, any>> = {
     shipments: "Shipments", resilience: "Resilience", alerts: "Alerts", reports: "Reports", settings: "Settings",
     home: "Home", media: "Media", incidentReport: "Incident Report", offlineSync: "Offline / Sync",
     reportIssue: "Report Issue", myReports: "My Reports", emergencyMap: "Emergency Map",
+    dashboard: "Dashboard", users: "Users", roles: "Roles", systems: "Systems", auditLogs: "Audit Logs",
     search: "Search roads, incidents, vehicles, districts...",
     searchLogistics: "Search vehicles, shipments, routes, districts...",
     searchCitizen: "Search for roads, incidents, facilities...",
+    searchAdmin: "Search users, reports, systems...",
     searchLocation: "Search location...",
     noLocations: "No locations found",
     selectLocation: "Select location",
@@ -131,9 +148,11 @@ const translations: Record<LanguageType, Record<string, any>> = {
     shipments: "शिपमेंट", resilience: "लचीलापन", alerts: "अलर्ट", settings: "सेटिंग्स",
     home: "होम", media: "मीडिया", incidentReport: "घटना रिपोर्ट", offlineSync: "ऑफलाइन / सिंक",
     reportIssue: "समस्या रिपोर्ट करें", myReports: "मेरी रिपोर्ट", emergencyMap: "आपातकालीन मानचित्र",
+    dashboard: "डैशबोर्ड", users: "उपयोगकर्ता", roles: "भूमिकाएँ", systems: "सिस्टम", auditLogs: "ऑडिट लॉग",
     search: "सड़क, घटनाएँ, वाहन, जिले खोजें...",
     searchLogistics: "वाहन, शिपमेंट, मार्ग, जिले खोजें...",
     searchCitizen: "सड़क, घटनाएं, सुविधाएं खोजें...",
+    searchAdmin: "उपयोगकर्ता, रिपोर्ट, सिस्टम खोजें...",
     searchLocation: "स्थान खोजें...",
     noLocations: "कोई स्थान नहीं मिला",
     selectLocation: "स्थान चुनें",
@@ -152,9 +171,11 @@ const translations: Record<LanguageType, Record<string, any>> = {
     shipments: "চালান", resilience: "স্থিতিস্থাপকতা", alerts: "সতৰ্কবাণী", reports: "প্ৰতিবেদন", settings: "ছেটিংছ",
     home: "গৃহ", media: "মিডিয়া", incidentReport: "ঘটনা প্ৰতিবেদন", offlineSync: "অফলাইন / ছিংক",
     reportIssue: "সমস্যা প্ৰতিবেদন", myReports: "মোৰ প্ৰতিবেদন", emergencyMap: "জৰুৰীকালীন মানচিত্ৰ",
+    dashboard: "ডেশ্বব'ৰ্ড", users: "ব্যৱহাৰকাৰী", roles: "ভূমিকা", systems: "প্ৰণালী", auditLogs: "অডিট লগ",
     search: "পথ, ঘটনা, যানবাহন, জিলা বিচাৰক...",
     searchLogistics: "যানবাহন, চালান, পথ, জিলা বিচাৰক...",
     searchCitizen: "পথ, ঘটনা, সুবিধা বিচাৰক...",
+    searchAdmin: "ব্যৱহাৰকাৰী, প্ৰতিবেদন, প্ৰণালী বিচাৰক...",
     searchLocation: "স্থান বিচাৰক...",
     noLocations: "কোনো স্থান পোৱা নগ'ল",
     selectLocation: "স্থান বাছনি কৰক",
@@ -187,16 +208,17 @@ function locationName(location: string, language: LanguageType) {
 
 export default function DashboardPage({
   onBackToHome,
-  userName = "Rahul Sharma",
-  userEmail = "rahul.citizen@nera.gov.in",
-  userRole = "Citizen",
+  userName = "Admin",
+  userEmail = "admin@nera.gov.in",
+  userRole = "Admin",
   onUpdateUser
 }: DashboardPageProps) {
+  const isAdmin = userRole.toLowerCase().includes("admin");
   const isCitizen = userRole.toLowerCase().includes("citizen");
   const isFieldAgent = userRole.toLowerCase().includes("field");
   const isLogistics = userRole.toLowerCase().includes("logistics");
 
-  const [active, setActive] = useState(isCitizen || isFieldAgent ? "Home" : "Overview");
+  const [active, setActive] = useState(isAdmin ? "Dashboard" : isCitizen || isFieldAgent ? "Home" : "Overview");
   const [mobileOpen, setMobileOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [location, setLocation] = useState(isLogistics ? "Assam" : "Dima Hasao");
@@ -207,7 +229,9 @@ export default function DashboardPage({
   const [profileOpen, setProfileOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
-  const navItems = isCitizen
+  const navItems = isAdmin
+    ? adminNavItems
+    : isCitizen
     ? citizenNavItems
     : isFieldAgent
     ? fieldAgentNavItems
@@ -251,6 +275,7 @@ export default function DashboardPage({
 
   const navLabel: Record<string, string> = {
     Overview: t.overview,
+    Dashboard: t.dashboard || "Dashboard",
     Home: t.home || "Home",
     Profile: t.profile,
     "Live Map": t.liveMap,
@@ -260,6 +285,10 @@ export default function DashboardPage({
     Resilience: t.resilience,
     Alerts: t.alerts,
     Reports: t.reports,
+    Users: t.users || "Users",
+    Roles: t.roles || "Roles",
+    Systems: t.systems || "Systems",
+    "Audit Logs": t.auditLogs || "Audit Logs",
     "Incident Report": t.incidentReport || "Incident Report",
     Media: t.media || "Media",
     "Offline / Sync": t.offlineSync || "Offline / Sync",
@@ -280,7 +309,9 @@ export default function DashboardPage({
         email: `${name.toLowerCase().replace(" ", ".")}@nera.gov.in`
       });
     }
-    setActive(roleName.toLowerCase().includes("field") || roleName.toLowerCase().includes("citizen") ? "Home" : "Overview");
+    if (roleName.toLowerCase().includes("admin")) setActive("Dashboard");
+    else if (roleName.toLowerCase().includes("field") || roleName.toLowerCase().includes("citizen")) setActive("Home");
+    else setActive("Overview");
     setProfileOpen(false);
   };
 
@@ -297,7 +328,9 @@ export default function DashboardPage({
             <span className="brand-back-hint">Home ↗</span>
           </div>
           <div className="brand-line"><span /><i /><span /><b /><span /></div>
-          <div className="brand-sub">{t.neraSubtitle}</div>
+          <div className="brand-sub">
+            {isAdmin ? <>North East Resilience Assistant<br />Administrator</> : t.neraSubtitle}
+          </div>
         </div>
 
         <nav className="main-nav">
@@ -315,7 +348,7 @@ export default function DashboardPage({
           {navItems.map(({ label, icon: Icon }) => (
             <button
               key={label}
-              className={`dashboard-nav-item ${(active === label || (active === "Overview" && label === "Home") || (active === "Home" && label === "Overview")) ? "active" : ""}`}
+              className={`dashboard-nav-item ${(active === label || (active === "Overview" && label === "Home") || (active === "Home" && label === "Overview") || (active === "Dashboard" && label === "Dashboard")) ? "active" : ""}`}
               onClick={() => { setActive(label); setMobileOpen(false); }}
             >
               <Icon size={19} strokeWidth={1.8} />
@@ -325,7 +358,17 @@ export default function DashboardPage({
         </nav>
 
         {/* Sidebar Bottom (Role-aware) */}
-        {isCitizen ? (
+        {isAdmin ? (
+          <div className="sidebar-bottom" style={{ marginTop: "auto", borderTop: "1px solid #f1f5f9", paddingTop: "10px" }}>
+            <button
+              className={`dashboard-nav-item ${active === "Settings" ? "active" : ""}`}
+              onClick={() => setActive("Settings")}
+            >
+              <Settings size={19} strokeWidth={1.8} />
+              <span>{t.settings}</span>
+            </button>
+          </div>
+        ) : isCitizen ? (
           <div
             onClick={() => setActive("Profile")}
             style={{
@@ -438,7 +481,18 @@ export default function DashboardPage({
             <Menu size={22} />
           </button>
 
-          {isCitizen ? (
+          {isAdmin ? (
+            /* Admin Header Search */
+            <div className="search-box">
+              <Search size={19} />
+              <input
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                placeholder={t.searchAdmin}
+              />
+              {search && <button onClick={() => setSearch("")}><X size={16} /></button>}
+            </div>
+          ) : isCitizen ? (
             /* Citizen Header Title Left */
             <div style={{ display: "flex", flexDirection: "column" }}>
               <h2 style={{ fontSize: "18px", fontWeight: "800", color: "#0f172a", margin: 0 }}>
@@ -468,7 +522,21 @@ export default function DashboardPage({
           )}
 
           <div className="top-actions" style={{ marginLeft: "auto" }}>
-            {isCitizen ? (
+            {isAdmin ? (
+              /* Admin Notification Bell */
+              <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
+                <button
+                  className="notification"
+                  onClick={() => {
+                    setNotificationOpen(v => !v);
+                    setProfileOpen(false);
+                  }}
+                  aria-expanded={notificationOpen}
+                >
+                  <Bell size={21} /><span>3</span>
+                </button>
+              </div>
+            ) : isCitizen ? (
               /* Citizen Right Top: Search + Bell (1) */
               <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "#f8fafc", border: "1px solid #cbd5e1", borderRadius: "8px", padding: "7px 12px", width: "240px" }}>
@@ -600,7 +668,7 @@ export default function DashboardPage({
                 aria-expanded={profileOpen}
               >
                 <div className="avatar">{getInitials(userName)}</div>
-                <div className="profile-text"><strong>{userName}</strong><small>{userRole}</small></div>
+                <div className="profile-text"><strong>{userName}</strong><small>{isAdmin ? "System Administrator" : userRole}</small></div>
                 <ChevronDown size={16} />
               </button>
 
@@ -608,13 +676,20 @@ export default function DashboardPage({
                 <div className="profile-menu">
                   <div className="profile-menu-head">
                     <div className="avatar large">{getInitials(userName)}</div>
-                    <div><strong>{userName}</strong><span>{userRole}</span></div>
+                    <div><strong>{userName}</strong><span>{isAdmin ? "System Administrator" : userRole}</span></div>
                   </div>
 
                   {/* Switch Role Fast Preview */}
                   <div style={{ padding: "8px 12px", background: "#f8fafc", borderBottom: "1px solid #e2e8f0", fontSize: "11px" }}>
                     <span style={{ fontWeight: 700, color: "#64748b", textTransform: "uppercase" }}>Switch Dashboard View</span>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4px", marginTop: "6px" }}>
+                      <button
+                        type="button"
+                        onClick={() => handleRoleSwitch("Admin", "Admin")}
+                        style={{ padding: "4px 6px", fontSize: "11px", borderRadius: "4px", border: "1px solid #cbd5e1", background: isAdmin ? "#dcfce7" : "#fff", color: isAdmin ? "#166534" : "#334155", fontWeight: 600 }}
+                      >
+                        🛡️ Admin
+                      </button>
                       <button
                         type="button"
                         onClick={() => handleRoleSwitch("Citizen", "Rahul Sharma")}
@@ -639,7 +714,7 @@ export default function DashboardPage({
                       <button
                         type="button"
                         onClick={() => handleRoleSwitch("Authority / Analyst", "Rakshana")}
-                        style={{ padding: "4px 6px", fontSize: "11px", borderRadius: "4px", border: "1px solid #cbd5e1", background: (!isLogistics && !isFieldAgent && !isCitizen) ? "#dcfce7" : "#fff", color: (!isLogistics && !isFieldAgent && !isCitizen) ? "#166534" : "#334155", fontWeight: 600 }}
+                        style={{ padding: "4px 6px", fontSize: "11px", borderRadius: "4px", border: "1px solid #cbd5e1", background: (!isAdmin && !isLogistics && !isFieldAgent && !isCitizen) ? "#dcfce7" : "#fff", color: (!isAdmin && !isLogistics && !isFieldAgent && !isCitizen) ? "#166534" : "#334155", fontWeight: 600 }}
                       >
                         🚨 Authority
                       </button>
@@ -698,8 +773,10 @@ export default function DashboardPage({
           )}
 
           {/* Role & Tab Routing */}
-          {active === "Home" || active === "Overview" ? (
-            isCitizen ? (
+          {active === "Dashboard" || active === "Overview" || active === "Home" ? (
+            isAdmin ? (
+              <AdminOverview onNavigateTab={(tab) => setActive(tab)} />
+            ) : isCitizen ? (
               <CitizenOverview
                 userName={userName}
                 onNavigateTab={(tab) => setActive(tab)}
@@ -727,6 +804,14 @@ export default function DashboardPage({
                 onNavigateTab={(tab) => setActive(tab)}
               />
             )
+          ) : active === "Users" ? (
+            <AdminUsersView />
+          ) : active === "Roles" ? (
+            <AdminRolesView />
+          ) : active === "Systems" ? (
+            <AdminSystemsView />
+          ) : active === "Audit Logs" ? (
+            <AdminAuditLogsView />
           ) : active === "Report Issue" ? (
             <CitizenReportView onSuccess={() => setActive("My Reports")} />
           ) : active === "My Reports" ? (
@@ -777,6 +862,8 @@ export default function DashboardPage({
               onUpdateLocation={setLocation}
               onUpdateUser={onUpdateUser}
             />
+          ) : isAdmin ? (
+            <AdminOverview onNavigateTab={(tab) => setActive(tab)} />
           ) : isCitizen ? (
             <CitizenOverview
               userName={userName}
