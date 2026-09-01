@@ -1,0 +1,27 @@
+{
+  "name": "nera-backend",
+  "version": "1.0.0",
+  "description": "NERA - North East Resilience Assistant Backend REST API Service",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js",
+    "test": "node src/tests/run_tests.js"
+  },
+  "dependencies": {
+    "@clerk/backend": "^3.16.13",
+    "@clerk/express": "^2.1.64",
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.5",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.7.0",
+    "jsonwebtoken": "^9.0.3",
+    "multer": "^2.3.0",
+    "pg": "^8.23.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.11"
+  }
+}
