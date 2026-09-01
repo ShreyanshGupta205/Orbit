@@ -325,7 +325,7 @@ export async function evalAIPrediction({ roadSegmentId, roadName, predictedRisk,
  * Evaluates an Evacuation Recommendation.
  * Alerts citizens, field agents, authority, and admin in the target district.
  */
-export async function evalEvacuationRecommended({ startPoint, destinationFacility, routeRisk, reason, districtId }) {
+export async function evalEvacuationRecommended({ startPoint, destinationFacility, routeRisk, reason, districtId, facilityId, roadSegmentId }) {
   const severity = routeRisk >= 0.7 ? "critical" : routeRisk >= 0.5 ? "high" : "medium";
 
   return await createAlert({
@@ -333,6 +333,8 @@ export async function evalEvacuationRecommended({ startPoint, destinationFacilit
     severity,
     targetRole: "citizen,field_agent,authority,admin",
     districtId: districtId || null,
+    facilityId: facilityId || null,
+    roadSegmentId: roadSegmentId || (!facilityId ? 1 : null),
     message: `[EVACUATION ADVISORY] Recommended evacuation to ${destinationFacility}. ${reason || ''}`,
     channel: "in_app"
   });
