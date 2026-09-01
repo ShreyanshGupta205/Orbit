@@ -935,23 +935,23 @@ export default function AuthPage({ onSuccess, onBackToHome, initialUser }: AuthP
                       <button
                         type="button"
                         style={{ padding: "7px 10px", fontSize: "11.5px", background: "#f8fafc", border: "1px solid #cbd5e1", borderRadius: "6px", cursor: "pointer", fontWeight: 600, color: "#1e293b", textAlign: "center" }}
-                        onClick={() => onSuccess({ name: "Manas Das", email: "manas.officer@assam.gov.in", role: "Authority" })}
+                        onClick={() => onSuccess({ name: "Rakshana", email: "rakshana.authority@nera.gov.in", role: "Authority / Analyst" })}
                       >
-                        🚨 Disaster Officer
+                        🚨 Authority / Analyst
                       </button>
                       <button
                         type="button"
                         style={{ padding: "7px 10px", fontSize: "11.5px", background: "#f8fafc", border: "1px solid #cbd5e1", borderRadius: "6px", cursor: "pointer", fontWeight: 600, color: "#1e293b", textAlign: "center" }}
-                        onClick={() => onSuccess({ name: "Field Agent", email: "field.agent@nera.gov.in", role: "Field Agent" })}
+                        onClick={() => onSuccess({ name: "Rahul Sharma", email: "rahul.logistics@nera.gov.in", role: "Logistics Operator" })}
+                      >
+                        🚚 Logistics Operator
+                      </button>
+                      <button
+                        type="button"
+                        style={{ padding: "7px 10px", fontSize: "11.5px", background: "#f8fafc", border: "1px solid #cbd5e1", borderRadius: "6px", cursor: "pointer", fontWeight: 600, color: "#1e293b", textAlign: "center" }}
+                        onClick={() => onSuccess({ name: "Arup Boro", email: "arup.field@nera.gov.in", role: "Field Agent" })}
                       >
                         👷 Field Agent
-                      </button>
-                      <button
-                        type="button"
-                        style={{ padding: "7px 10px", fontSize: "11.5px", background: "#f8fafc", border: "1px solid #cbd5e1", borderRadius: "6px", cursor: "pointer", fontWeight: 600, color: "#1e293b", textAlign: "center" }}
-                        onClick={() => onSuccess({ name: "Logistics Operator", email: "logistics@nera.gov.in", role: "Logistics" })}
-                      >
-                        🚚 Logistics
                       </button>
                     </div>
                   </div>
