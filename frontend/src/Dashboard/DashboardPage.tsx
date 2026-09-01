@@ -22,7 +22,9 @@ import {
   ArrowLeft,
   LogOut,
   Camera,
-  RefreshCw
+  RefreshCw,
+  FileEdit,
+  Compass
 } from "lucide-react";
 import LiveMapView from "./LiveMapView";
 import IncidentsView from "./pages/IncidentsView";
@@ -40,6 +42,10 @@ import FieldAgentOverview from "./pages/FieldAgentOverview";
 import FieldAgentMediaView from "./pages/FieldAgentMediaView";
 import FieldAgentSyncView from "./pages/FieldAgentSyncView";
 import FieldAgentReportView from "./pages/FieldAgentReportView";
+import CitizenOverview from "./pages/CitizenOverview";
+import CitizenReportView from "./pages/CitizenReportView";
+import CitizenMyReportsView from "./pages/CitizenMyReportsView";
+import CitizenEmergencyMapView from "./pages/CitizenEmergencyMapView";
 import WhatIfAnalysisView from "./pages/WhatIfAnalysisView";
 import { useAlerts } from "../hooks/useAlerts";
 import "./dashboard.css";
@@ -88,6 +94,13 @@ const fieldAgentNavItems = [
   { key: "Offline / Sync", label: "Offline / Sync", icon: RefreshCw },
 ];
 
+const citizenNavItems = [
+  { key: "Home", label: "Home", icon: Home },
+  { key: "Report Issue", label: "Report Issue", icon: FileEdit },
+  { key: "My Reports", label: "My Reports", icon: FileText },
+  { key: "Emergency Map", label: "Emergency Map", icon: Compass },
+];
+
 type LanguageType = "English" | "Hindi" | "Assamese";
 
 const translations: Record<LanguageType, Record<string, any>> = {
@@ -97,8 +110,10 @@ const translations: Record<LanguageType, Record<string, any>> = {
     overview: "Overview", profile: "Profile", liveMap: "Live Map", incidents: "Incidents", vehicles: "Vehicles",
     shipments: "Shipments", resilience: "Resilience", alerts: "Alerts", reports: "Reports", settings: "Settings",
     home: "Home", media: "Media", incidentReport: "Incident Report", offlineSync: "Offline / Sync",
+    reportIssue: "Report Issue", myReports: "My Reports", emergencyMap: "Emergency Map",
     search: "Search roads, incidents, vehicles, districts...",
     searchLogistics: "Search vehicles, shipments, routes, districts...",
+    searchCitizen: "Search for roads, incidents, facilities...",
     searchLocation: "Search location...",
     noLocations: "No locations found",
     selectLocation: "Select location",
@@ -115,8 +130,10 @@ const translations: Record<LanguageType, Record<string, any>> = {
     overview: "अवलोकन", profile: "प्रोफ़ाइल", liveMap: "लाइव मानचित्र", incidents: "घटनाएँ", vehicles: "वाहन",
     shipments: "शिपमेंट", resilience: "लचीलापन", alerts: "अलर्ट", settings: "सेटिंग्स",
     home: "होम", media: "मीडिया", incidentReport: "घटना रिपोर्ट", offlineSync: "ऑफलाइन / सिंक",
+    reportIssue: "समस्या रिपोर्ट करें", myReports: "मेरी रिपोर्ट", emergencyMap: "आपातकालीन मानचित्र",
     search: "सड़क, घटनाएँ, वाहन, जिले खोजें...",
     searchLogistics: "वाहन, शिपमेंट, मार्ग, जिले खोजें...",
+    searchCitizen: "सड़क, घटनाएं, सुविधाएं खोजें...",
     searchLocation: "स्थान खोजें...",
     noLocations: "कोई स्थान नहीं मिला",
     selectLocation: "स्थान चुनें",
@@ -134,8 +151,10 @@ const translations: Record<LanguageType, Record<string, any>> = {
     overview: "অভাৰভিউ", profile: "প্ৰফাইল", liveMap: "লাইভ মানচিত্ৰ", incidents: "ঘটনা", vehicles: "যানবাহন",
     shipments: "চালান", resilience: "স্থিতিস্থাপকতা", alerts: "সতৰ্কবাণী", reports: "প্ৰতিবেদন", settings: "ছেটিংছ",
     home: "গৃহ", media: "মিডিয়া", incidentReport: "ঘটনা প্ৰতিবেদন", offlineSync: "অফলাইন / ছিংক",
+    reportIssue: "সমস্যা প্ৰতিবেদন", myReports: "মোৰ প্ৰতিবেদন", emergencyMap: "জৰুৰীকালীন মানচিত্ৰ",
     search: "পথ, ঘটনা, যানবাহন, জিলা বিচাৰক...",
     searchLogistics: "যানবাহন, চালান, পথ, জিলা বিচাৰক...",
+    searchCitizen: "পথ, ঘটনা, সুবিধা বিচাৰক...",
     searchLocation: "স্থান বিচাৰক...",
     noLocations: "কোনো স্থান পোৱা নগ'ল",
     selectLocation: "স্থান বাছনি কৰক",
@@ -168,15 +187,16 @@ function locationName(location: string, language: LanguageType) {
 
 export default function DashboardPage({
   onBackToHome,
-  userName = "Rahul",
-  userEmail = "rahul.field@nera.gov.in",
-  userRole = "Field Agent",
+  userName = "Rahul Sharma",
+  userEmail = "rahul.citizen@nera.gov.in",
+  userRole = "Citizen",
   onUpdateUser
 }: DashboardPageProps) {
+  const isCitizen = userRole.toLowerCase().includes("citizen");
   const isFieldAgent = userRole.toLowerCase().includes("field");
   const isLogistics = userRole.toLowerCase().includes("logistics");
 
-  const [active, setActive] = useState(isFieldAgent ? "Home" : "Overview");
+  const [active, setActive] = useState(isCitizen || isFieldAgent ? "Home" : "Overview");
   const [mobileOpen, setMobileOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [location, setLocation] = useState(isLogistics ? "Assam" : "Dima Hasao");
@@ -187,7 +207,13 @@ export default function DashboardPage({
   const [profileOpen, setProfileOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
-  const navItems = isFieldAgent ? fieldAgentNavItems : isLogistics ? logisticsNavItems : authorityNavItems;
+  const navItems = isCitizen
+    ? citizenNavItems
+    : isFieldAgent
+    ? fieldAgentNavItems
+    : isLogistics
+    ? logisticsNavItems
+    : authorityNavItems;
 
   const { unreadCount, toastAlert, dismissToast } = useAlerts();
 
@@ -237,6 +263,9 @@ export default function DashboardPage({
     "Incident Report": t.incidentReport || "Incident Report",
     Media: t.media || "Media",
     "Offline / Sync": t.offlineSync || "Offline / Sync",
+    "Report Issue": t.reportIssue || "Report Issue",
+    "My Reports": t.myReports || "My Reports",
+    "Emergency Map": t.emergencyMap || "Emergency Map",
     "Route Planner": "Route Planner",
     "What If Analysis": "What If Analysis",
     "Admin Ops": "Admin Ops",
@@ -251,7 +280,7 @@ export default function DashboardPage({
         email: `${name.toLowerCase().replace(" ", ".")}@nera.gov.in`
       });
     }
-    setActive(roleName.toLowerCase().includes("field") ? "Home" : "Overview");
+    setActive(roleName.toLowerCase().includes("field") || roleName.toLowerCase().includes("citizen") ? "Home" : "Overview");
     setProfileOpen(false);
   };
 
@@ -296,7 +325,31 @@ export default function DashboardPage({
         </nav>
 
         {/* Sidebar Bottom (Role-aware) */}
-        {isFieldAgent ? (
+        {isCitizen ? (
+          <div
+            onClick={() => setActive("Profile")}
+            style={{
+              marginTop: "auto",
+              borderTop: "1px solid #f1f5f9",
+              padding: "12px 10px",
+              borderRadius: "8px",
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              gap: "10px",
+              background: active === "Profile" ? "#edf7f1" : "transparent"
+            }}
+          >
+            <div style={{ width: "34px", height: "34px", borderRadius: "50%", background: "#f1f5f9", border: "1px solid #cbd5e1", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <UserRound size={17} color="#475569" />
+            </div>
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              <strong style={{ fontSize: "12.5px", color: "#0f172a", lineHeight: "1.2" }}>{userName}</strong>
+              <span style={{ fontSize: "10.5px", color: "#64748b" }}>Citizen</span>
+              <span style={{ fontSize: "10px", color: "#94a3b8" }}>Guwahati, Assam</span>
+            </div>
+          </div>
+        ) : isFieldAgent ? (
           <div
             onClick={() => setActive("Profile")}
             style={{
@@ -385,7 +438,17 @@ export default function DashboardPage({
             <Menu size={22} />
           </button>
 
-          {isFieldAgent ? (
+          {isCitizen ? (
+            /* Citizen Header Title Left */
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              <h2 style={{ fontSize: "18px", fontWeight: "800", color: "#0f172a", margin: 0 }}>
+                Welcome, {userName.split(" ")[0]}!
+              </h2>
+              <span style={{ fontSize: "12px", color: "#64748b" }}>
+                Stay informed. Report issues. Keep your region safe.
+              </span>
+            </div>
+          ) : isFieldAgent ? (
             /* Field Agent Header Style */
             <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
               <span style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "13px", fontWeight: "700", color: "#166534", background: "#f0fdf4", border: "1px solid #bbf7d0", padding: "4px 12px", borderRadius: "16px" }}>
@@ -405,7 +468,31 @@ export default function DashboardPage({
           )}
 
           <div className="top-actions" style={{ marginLeft: "auto" }}>
-            {isFieldAgent ? (
+            {isCitizen ? (
+              /* Citizen Right Top: Search + Bell (1) */
+              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "#f8fafc", border: "1px solid #cbd5e1", borderRadius: "8px", padding: "7px 12px", width: "240px" }}>
+                  <Search size={16} color="#64748b" />
+                  <input
+                    type="text"
+                    value={search}
+                    onChange={e => setSearch(e.target.value)}
+                    placeholder="Search for roads, incidents, facilities..."
+                    style={{ border: "none", background: "transparent", outline: "none", fontSize: "12px", width: "100%" }}
+                  />
+                </div>
+                <button
+                  className="notification"
+                  onClick={() => {
+                    setNotificationOpen(v => !v);
+                    setProfileOpen(false);
+                  }}
+                  aria-expanded={notificationOpen}
+                >
+                  <Bell size={21} /><span>1</span>
+                </button>
+              </div>
+            ) : isFieldAgent ? (
               /* Field Agent right timestamp & bell */
               <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
                 <span style={{ fontSize: "13px", fontWeight: "600", color: "#475569" }}>
@@ -530,6 +617,13 @@ export default function DashboardPage({
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "4px", marginTop: "6px" }}>
                       <button
                         type="button"
+                        onClick={() => handleRoleSwitch("Citizen", "Rahul Sharma")}
+                        style={{ padding: "4px 6px", fontSize: "11px", borderRadius: "4px", border: "1px solid #cbd5e1", background: isCitizen ? "#dcfce7" : "#fff", color: isCitizen ? "#166534" : "#334155", fontWeight: 600 }}
+                      >
+                        👥 Citizen
+                      </button>
+                      <button
+                        type="button"
                         onClick={() => handleRoleSwitch("Field Agent", "Rahul")}
                         style={{ padding: "4px 6px", fontSize: "11px", borderRadius: "4px", border: "1px solid #cbd5e1", background: isFieldAgent ? "#dcfce7" : "#fff", color: isFieldAgent ? "#166534" : "#334155", fontWeight: 600 }}
                       >
@@ -545,7 +639,7 @@ export default function DashboardPage({
                       <button
                         type="button"
                         onClick={() => handleRoleSwitch("Authority / Analyst", "Rakshana")}
-                        style={{ padding: "4px 6px", fontSize: "11px", borderRadius: "4px", border: "1px solid #cbd5e1", background: (!isLogistics && !isFieldAgent) ? "#dcfce7" : "#fff", color: (!isLogistics && !isFieldAgent) ? "#166534" : "#334155", fontWeight: 600 }}
+                        style={{ padding: "4px 6px", fontSize: "11px", borderRadius: "4px", border: "1px solid #cbd5e1", background: (!isLogistics && !isFieldAgent && !isCitizen) ? "#dcfce7" : "#fff", color: (!isLogistics && !isFieldAgent && !isCitizen) ? "#166534" : "#334155", fontWeight: 600 }}
                       >
                         🚨 Authority
                       </button>
@@ -605,7 +699,13 @@ export default function DashboardPage({
 
           {/* Role & Tab Routing */}
           {active === "Home" || active === "Overview" ? (
-            isFieldAgent ? (
+            isCitizen ? (
+              <CitizenOverview
+                userName={userName}
+                onNavigateTab={(tab) => setActive(tab)}
+                onOpenReport={() => setActive("Report Issue")}
+              />
+            ) : isFieldAgent ? (
               <FieldAgentOverview
                 userName={userName}
                 currentRoute="NH-27"
@@ -627,6 +727,12 @@ export default function DashboardPage({
                 onNavigateTab={(tab) => setActive(tab)}
               />
             )
+          ) : active === "Report Issue" ? (
+            <CitizenReportView onSuccess={() => setActive("My Reports")} />
+          ) : active === "My Reports" ? (
+            <CitizenMyReportsView />
+          ) : active === "Emergency Map" ? (
+            <CitizenEmergencyMapView />
           ) : active === "Incident Report" ? (
             <FieldAgentReportView onSuccess={() => setActive("Home")} />
           ) : active === "Media" ? (
@@ -670,6 +776,12 @@ export default function DashboardPage({
               userRole={userRole}
               onUpdateLocation={setLocation}
               onUpdateUser={onUpdateUser}
+            />
+          ) : isCitizen ? (
+            <CitizenOverview
+              userName={userName}
+              onNavigateTab={(tab) => setActive(tab)}
+              onOpenReport={() => setActive("Report Issue")}
             />
           ) : isFieldAgent ? (
             <FieldAgentOverview
