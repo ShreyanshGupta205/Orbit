@@ -208,9 +208,9 @@ function locationName(location: string, language: LanguageType) {
 
 export default function DashboardPage({
   onBackToHome,
-  userName = "Admin",
-  userEmail = "admin@nera.gov.in",
-  userRole = "Admin",
+  userName = "Rakshana",
+  userEmail = "rakshana.authority@nera.gov.in",
+  userRole = "Authority / Analyst",
   onUpdateUser
 }: DashboardPageProps) {
   const isAdmin = userRole.toLowerCase().includes("admin");
