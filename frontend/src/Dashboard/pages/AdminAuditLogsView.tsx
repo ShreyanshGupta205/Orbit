@@ -13,100 +13,16 @@ import {
   ChevronLeft,
   ChevronRight
 } from "lucide-react";
-
-interface AuditLog {
-  id: string;
-  timestamp: string;
-  userName: string;
-  userEmail: string;
-  action: string;
-  actionColor: string;
-  module: string;
-  details: string;
-  ip: string;
-  status: "Success" | "Failed";
-}
+import { useSaaSStore } from "../../store/saasStore";
 
 export default function AdminAuditLogsView() {
+  const { auditLogs } = useSaaSStore();
   const [userFilter, setUserFilter] = useState("All Users");
   const [moduleFilter, setModuleFilter] = useState("All Modules");
   const [actionFilter, setActionFilter] = useState("All Actions");
   const [page, setPage] = useState(1);
 
-  const logs: AuditLog[] = [
-    {
-      id: "log-1",
-      timestamp: "20 May 2026, 10:30 AM",
-      userName: "Amit Sharma",
-      userEmail: "amit@nera.gov.in",
-      action: "Login",
-      actionColor: "#dcfce7",
-      module: "Authentication",
-      details: "User logged in successfully",
-      ip: "103.56.12.1",
-      status: "Success"
-    },
-    {
-      id: "log-2",
-      timestamp: "20 May 2026, 10:28 AM",
-      userName: "Priya Das",
-      userEmail: "priya@nera.gov.in",
-      action: "Incident Report",
-      actionColor: "#dbeafe",
-      module: "Incidents",
-      details: "New incident reported: Landslide – NH-27",
-      ip: "103.56.12.5",
-      status: "Success"
-    },
-    {
-      id: "log-3",
-      timestamp: "20 May 2026, 10:24 AM",
-      userName: "Sunita Iyer",
-      userEmail: "sunita@nera.gov.in",
-      action: "Role Update",
-      actionColor: "#ede9fe",
-      module: "Users",
-      details: "Updated role for Rahul Verma",
-      ip: "103.56.12.3",
-      status: "Success"
-    },
-    {
-      id: "log-4",
-      timestamp: "20 May 2026, 10:20 AM",
-      userName: "Rahul Verma",
-      userEmail: "rahul@nera.gov.in",
-      action: "Media Upload",
-      actionColor: "#fee2e2",
-      module: "Media",
-      details: "Uploaded 3 photos for NH-27",
-      ip: "103.56.12.4",
-      status: "Success"
-    },
-    {
-      id: "log-5",
-      timestamp: "20 May 2026, 10:18 AM",
-      userName: "Admin",
-      userEmail: "admin@nera.gov.in",
-      action: "System Config",
-      actionColor: "#fef3c7",
-      module: "System",
-      details: "Updated system configuration",
-      ip: "103.56.12.1",
-      status: "Success"
-    },
-    {
-      id: "log-6",
-      timestamp: "20 May 2026, 10:15 AM",
-      userName: "Priya Das",
-      userEmail: "priya@nera.gov.in",
-      action: "User Deactivate",
-      actionColor: "#fee2e2",
-      module: "Users",
-      details: "Deactivated user: temp_user",
-      ip: "103.56.12.5",
-      status: "Failed"
-    }
-  ];
+  const logs = auditLogs;
 
   const filteredLogs = logs.filter(l => {
     const matchUser = userFilter === "All Users" || l.userName.includes(userFilter);

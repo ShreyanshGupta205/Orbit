@@ -19,9 +19,9 @@ function getPageFromHash(): PageView {
 }
 
 const DEFAULT_USER: UserProfile = {
-  name: "",
-  email: "",
-  role: "Citizen"
+  name: "Rakshana",
+  email: "rakshana.authority@nera.gov.in",
+  role: "Authority / Analyst"
 };
 
 export default function App() {
@@ -46,7 +46,7 @@ export default function App() {
     if (isSignedIn && clerkUser) {
       const displayName = clerkUser.fullName || clerkUser.firstName || user.name;
       const primaryEmail = clerkUser.primaryEmailAddress?.emailAddress || user.email;
-      const role = (clerkUser.publicMetadata?.role as string) || user.role || "District Disaster Management Officer";
+      const role = (clerkUser.publicMetadata?.role as string) || user.role || "Authority / Analyst";
 
       const updatedUser: UserProfile = {
         name: displayName,
@@ -83,6 +83,29 @@ export default function App() {
     setUser(authenticatedUser);
     try {
       localStorage.setItem("nera_auth_user", JSON.stringify(authenticatedUser));
+    } catch {
+      // ignore
+    }
+    navigateTo("dashboard");
+  };
+
+  const handleSelectRole = (role: string, name?: string) => {
+    const defaultName =
+      role.includes("Authority") ? "Rakshana" :
+      role.includes("Logistics") ? "Rahul Sharma" :
+      role.includes("Field") ? "Rahul" :
+      role.includes("Admin") ? "Admin" :
+      "Rahul Sharma";
+
+    const selectedUser: UserProfile = {
+      name: name || defaultName,
+      email: `${(name || defaultName).toLowerCase().replace(/\s+/g, ".")}@nera.gov.in`,
+      role: role
+    };
+
+    setUser(selectedUser);
+    try {
+      localStorage.setItem("nera_auth_user", JSON.stringify(selectedUser));
     } catch {
       // ignore
     }
@@ -149,5 +172,10 @@ export default function App() {
     );
   }
 
-  return <LandingPage onGetStarted={() => navigateTo(isSignedIn ? "dashboard" : "auth")} />;
+  return (
+    <LandingPage
+      onGetStarted={() => navigateTo(isSignedIn ? "dashboard" : "auth")}
+      onSelectRole={handleSelectRole}
+    />
+  );
 }

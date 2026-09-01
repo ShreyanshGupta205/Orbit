@@ -6,59 +6,18 @@ import {
   AlertTriangle,
   ChevronRight
 } from "lucide-react";
-
-interface ReportItem {
-  id: string;
-  title: string;
-  location: string;
-  category: string;
-  status: "In Progress" | "Resolved" | "Needs Attention";
-  date: string;
-  image: string;
-}
+import { useSaaSStore } from "../../store/saasStore";
 
 export default function CitizenMyReportsView() {
+  const { citizenReports } = useSaaSStore();
   const [activeTab, setActiveTab] = useState<"all" | "in_progress" | "resolved" | "needs_attention">("all");
-  const [selectedReport, setSelectedReport] = useState<ReportItem | null>(null);
+  const [selectedReport, setSelectedReport] = useState<any>(null);
 
-  const reports: ReportItem[] = [
-    {
-      id: "REP-101",
-      title: "Road damage on NH-27",
-      location: "Karbi Anglong",
-      category: "Road Damage",
-      status: "In Progress",
-      date: "18 May 2025",
-      image: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=200&auto=format&fit=crop&q=60"
-    },
-    {
-      id: "REP-102",
-      title: "Landslide near NH-6",
-      location: "Cachar",
-      category: "Landslide",
-      status: "Resolved",
-      date: "17 May 2025",
-      image: "https://images.unsplash.com/photo-1547683905-f686c993aae5?w=200&auto=format&fit=crop&q=60"
-    },
-    {
-      id: "REP-103",
-      title: "Flooding on SH-12",
-      location: "Dima Hasao",
-      category: "Flood",
-      status: "In Progress",
-      date: "16 May 2025",
-      image: "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=200&auto=format&fit=crop&q=60"
-    },
-    {
-      id: "REP-104",
-      title: "Bridge issue on NH-37",
-      location: "Sivasagar",
-      category: "Bridge Issue",
-      status: "Needs Attention",
-      date: "15 May 2025",
-      image: "https://images.unsplash.com/photo-1584467735815-f778f274e296?w=200&auto=format&fit=crop&q=60"
-    }
-  ];
+  const reports = citizenReports;
+
+  const inProgressCount = reports.filter(r => r.status === "In Progress").length;
+  const resolvedCount = reports.filter(r => r.status === "Resolved").length;
+  const needsAttentionCount = reports.filter(r => r.status === "Needs Attention").length;
 
   const filteredReports = reports.filter(r => {
     if (activeTab === "in_progress") return r.status === "In Progress";
@@ -160,7 +119,7 @@ export default function CitizenMyReportsView() {
           </div>
           <div>
             <span style={{ fontSize: "11.5px", fontWeight: "600", color: "#64748b" }}>Total Reports</span>
-            <div style={{ fontSize: "24px", fontWeight: "800", color: "#0f172a" }}>12</div>
+            <div style={{ fontSize: "24px", fontWeight: "800", color: "#0f172a" }}>{reports.length}</div>
           </div>
         </div>
 
@@ -171,7 +130,7 @@ export default function CitizenMyReportsView() {
           </div>
           <div>
             <span style={{ fontSize: "11.5px", fontWeight: "600", color: "#64748b" }}>In Progress</span>
-            <div style={{ fontSize: "24px", fontWeight: "800", color: "#0f172a" }}>4</div>
+            <div style={{ fontSize: "24px", fontWeight: "800", color: "#0f172a" }}>{inProgressCount}</div>
           </div>
         </div>
 
@@ -182,7 +141,7 @@ export default function CitizenMyReportsView() {
           </div>
           <div>
             <span style={{ fontSize: "11.5px", fontWeight: "600", color: "#64748b" }}>Resolved</span>
-            <div style={{ fontSize: "24px", fontWeight: "800", color: "#0f172a" }}>7</div>
+            <div style={{ fontSize: "24px", fontWeight: "800", color: "#0f172a" }}>{resolvedCount}</div>
           </div>
         </div>
 
@@ -193,7 +152,7 @@ export default function CitizenMyReportsView() {
           </div>
           <div>
             <span style={{ fontSize: "11.5px", fontWeight: "600", color: "#64748b" }}>Needs Attention</span>
-            <div style={{ fontSize: "24px", fontWeight: "800", color: "#0f172a" }}>1</div>
+            <div style={{ fontSize: "24px", fontWeight: "800", color: "#0f172a" }}>{needsAttentionCount}</div>
           </div>
         </div>
       </div>

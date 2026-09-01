@@ -7,6 +7,7 @@ import {
   CheckCircle2,
   ChevronDown
 } from "lucide-react";
+import { saasStore } from "../../store/saasStore";
 
 interface CitizenReportViewProps {
   onSuccess?: () => void;
@@ -44,6 +45,16 @@ export default function CitizenReportView({ onSuccess }: CitizenReportViewProps)
     e.preventDefault();
     setIsSubmitting(true);
     setTimeout(() => {
+      saasStore.addCitizenReport({
+        title: description ? description.slice(0, 40) : `${category} reported on ${location}`,
+        location: location || "Assam Corridor",
+        category,
+        status: "In Progress",
+        image: mediaFile ? URL.createObjectURL(mediaFile) : "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=300&auto=format&fit=crop&q=60",
+        description,
+        reportedBy: "Rahul Sharma",
+        liveLocation: shareLiveLocation
+      });
       setIsSubmitting(false);
       setIsSubmitted(true);
       if (onSuccess) {

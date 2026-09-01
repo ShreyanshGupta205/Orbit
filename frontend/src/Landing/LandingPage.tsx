@@ -252,9 +252,8 @@ function KeyFeatures() {
         <div className="kf-stats">
           {stats.map((stat, index) => (
             <div
-              className={`kf-stat ${
-                index !== stats.length - 1 ? "kf-stat-border" : ""
-              }`}
+              className={`kf-stat ${index !== stats.length - 1 ? "kf-stat-border" : ""
+                }`}
               key={stat.label}
             >
               <div className="kf-stat-icon">
