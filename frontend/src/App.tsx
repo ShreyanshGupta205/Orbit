@@ -89,29 +89,6 @@ export default function App() {
     navigateTo("dashboard");
   };
 
-  const handleSelectRole = (role: string, name?: string) => {
-    const defaultName =
-      role.includes("Authority") ? "Rakshana" :
-      role.includes("Logistics") ? "Rahul Sharma" :
-      role.includes("Field") ? "Rahul" :
-      role.includes("Admin") ? "Admin" :
-      "Rahul Sharma";
-
-    const selectedUser: UserProfile = {
-      name: name || defaultName,
-      email: `${(name || defaultName).toLowerCase().replace(/\s+/g, ".")}@nera.gov.in`,
-      role: role
-    };
-
-    setUser(selectedUser);
-    try {
-      localStorage.setItem("nera_auth_user", JSON.stringify(selectedUser));
-    } catch {
-      // ignore
-    }
-    navigateTo("dashboard");
-  };
-
   const handleUpdateUser = (updated: { name: string; email?: string; role?: string }) => {
     setUser((prev) => {
       const next = {
@@ -172,10 +149,5 @@ export default function App() {
     );
   }
 
-  return (
-    <LandingPage
-      onGetStarted={() => navigateTo(isSignedIn ? "dashboard" : "auth")}
-      onSelectRole={handleSelectRole}
-    />
-  );
+  return <LandingPage onGetStarted={() => navigateTo(isSignedIn ? "dashboard" : "auth")} />;
 }

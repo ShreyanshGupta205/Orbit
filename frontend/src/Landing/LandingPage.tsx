@@ -15,11 +15,6 @@ import {
   ShieldCheck,
   Users,
   X,
-  Truck,
-  HardHat,
-  UserCheck,
-  ShieldAlert,
-  ArrowUpRight
 } from "lucide-react";
 import { useState } from "react";
 import { SignedIn, SignedOut, UserButton } from "@clerk/clerk-react";
@@ -33,10 +28,9 @@ import MobileApp from "../Components/MobileApp";
 
 export interface LandingPageProps {
   onGetStarted?: () => void;
-  onSelectRole?: (role: string, name?: string) => void;
 }
 
-function Header({ onGetStarted, onSelectRole }: { onGetStarted?: () => void; onSelectRole?: (role: string, name?: string) => void }) {
+function Header({ onGetStarted }: { onGetStarted?: () => void }) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -52,22 +46,15 @@ function Header({ onGetStarted, onSelectRole }: { onGetStarted?: () => void; onS
 
         <nav className={open ? "nav-links mobile-open" : "nav-links"}>
           <a href="#hero" onClick={() => setOpen(false)}>Home</a>
-          <a href="#roles" onClick={() => setOpen(false)}>Workspaces</a>
           <a href="#features" onClick={() => setOpen(false)}>Features</a>
           <a href="#live-data" onClick={() => setOpen(false)}>Live Data</a>
           <a href="#mobile-app" onClick={() => setOpen(false)}>Mobile App</a>
+          <a href="#integrations" onClick={() => setOpen(false)}>Integrations</a>
           <a href="#faq" onClick={() => setOpen(false)}>FAQ</a>
           <a href="#contact" onClick={() => setOpen(false)}>Contact</a>
         </nav>
 
         <div className="nav-actions" style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <button
-            onClick={() => onSelectRole ? onSelectRole("Citizen", "Rahul Sharma") : onGetStarted && onGetStarted()}
-            style={{ padding: "8px 14px", borderRadius: "8px", border: "1px solid #cbd5e1", background: "#ffffff", color: "#334155", fontWeight: "700", fontSize: "13px", cursor: "pointer" }}
-          >
-            Citizen Portal
-          </button>
-
           <SignedOut>
             <button className="login-btn" onClick={onGetStarted} title="Sign In to NERA">
               <Users size={15} />
@@ -103,9 +90,6 @@ function Hero({ onGetStarted }: { onGetStarted?: () => void }) {
 
       <div className="container hero-content">
         <div className="hero-copy">
-          <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", background: "#dcfce7", color: "#166534", padding: "6px 14px", borderRadius: "20px", fontSize: "12px", fontWeight: "700", marginBottom: "14px" }}>
-            ✨ Enterprise Multi-Tenant Disaster &amp; Logistics SaaS
-          </div>
           <h1>
             Building a Resilient Northeast,
             <br />
@@ -128,11 +112,12 @@ function Hero({ onGetStarted }: { onGetStarted?: () => void }) {
             <button
               className="outline-btn"
               onClick={() => {
-                const rolesEl = document.getElementById("roles");
-                if (rolesEl) rolesEl.scrollIntoView({ behavior: "smooth" });
+                const liveDataEl = document.getElementById("live-data");
+                if (liveDataEl) liveDataEl.scrollIntoView({ behavior: "smooth" });
               }}
             >
-              Explore Workspaces ↓
+              <PlayIcon />
+              Watch Overview
             </button>
           </div>
         </div>
@@ -141,149 +126,11 @@ function Hero({ onGetStarted }: { onGetStarted?: () => void }) {
   );
 }
 
-function RoleWorkspaces({ onSelectRole }: { onSelectRole?: (role: string, name?: string) => void }) {
-  const roles = [
-    {
-      id: "authority",
-      role: "Authority / Analyst",
-      name: "Rakshana",
-      title: "Disaster Management & Regional Oversight",
-      desc: "District hazard analytics, live corridor maps, road resilience scoring, and evacuation route planning.",
-      icon: ShieldAlert,
-      badge: "Command Center",
-      color: "#ef4444",
-      bg: "#fff5f5",
-      border: "#fecaca"
-    },
-    {
-      id: "logistics",
-      role: "Logistics Operator",
-      name: "Rahul Sharma",
-      title: "Supply Chain & Transit Dispatch",
-      desc: "Real-time fleet GPS tracking, critical cargo priority routes, shipment status, and route risk donut analytics.",
-      icon: Truck,
-      badge: "Fleet Dispatch",
-      color: "#2563eb",
-      bg: "#eff6ff",
-      border: "#bfdbfe"
-    },
-    {
-      id: "field",
-      role: "Field Agent",
-      name: "Rahul",
-      title: "On-Ground Incident Response",
-      desc: "Instant field hazard submission, geotagged photo capture, voice dispatch notes, and offline sync queue.",
-      icon: HardHat,
-      badge: "Field Operations",
-      color: "#16a34a",
-      bg: "#f0fdf4",
-      border: "#bbf7d0"
-    },
-    {
-      id: "citizen",
-      role: "Citizen",
-      name: "Rahul Sharma",
-      title: "Public Road Safety & Emergency Alerts",
-      desc: "Real-time hazard warnings, emergency helpline directory, road damage reporting, and my reports tracking.",
-      icon: UserCheck,
-      badge: "Public Portal",
-      color: "#059669",
-      bg: "#f0fdf4",
-      border: "#bbf7d0"
-    },
-    {
-      id: "admin",
-      role: "Admin",
-      name: "Admin",
-      title: "Platform Administration & Audit Security",
-      desc: "Role & permission matrix, user provisioning, infrastructure telemetry, and comprehensive audit logs.",
-      icon: ShieldCheck,
-      badge: "System Governance",
-      color: "#7c3aed",
-      bg: "#faf5ff",
-      border: "#e9d5ff"
-    }
-  ];
-
+function PlayIcon() {
   return (
-    <section id="roles" style={{ padding: "80px 0", background: "#f8fafc", borderTop: "1px solid #e2e8f0", borderBottom: "1px solid #e2e8f0" }}>
-      <div className="container">
-        <div style={{ textAlign: "center", maxWidth: "680px", margin: "0 auto 50px auto" }}>
-          <span style={{ fontSize: "12px", fontWeight: "800", color: "#16a34a", textTransform: "uppercase", letterSpacing: "1px" }}>
-            Tailored Role Experiences
-          </span>
-          <h2 style={{ fontSize: "32px", fontWeight: "800", color: "#0f172a", margin: "8px 0 12px 0", letterSpacing: "-0.5px" }}>
-            Unified Workspaces for Every Stakeholder
-          </h2>
-          <p style={{ fontSize: "15px", color: "#64748b", lineHeight: "1.6" }}>
-            Experience purpose-built dashboards designed specifically for disaster authorities, logistics fleets, ground field agents, citizens, and system administrators.
-          </p>
-        </div>
-
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "20px" }}>
-          {roles.map((r) => {
-            const IconComp = r.icon;
-            return (
-              <div
-                key={r.id}
-                style={{
-                  background: "#ffffff",
-                  border: `1.5px solid ${r.border}`,
-                  borderRadius: "16px",
-                  padding: "24px",
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "space-between",
-                  boxShadow: "0 4px 12px rgba(0,0,0,0.03)"
-                }}
-              >
-                <div>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-                    <div style={{ width: "46px", height: "46px", borderRadius: "12px", background: r.bg, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <IconComp size={24} color={r.color} />
-                    </div>
-                    <span style={{ padding: "4px 10px", borderRadius: "20px", fontSize: "11px", fontWeight: "700", background: r.bg, color: r.color }}>
-                      {r.badge}
-                    </span>
-                  </div>
-
-                  <h3 style={{ fontSize: "18px", fontWeight: "800", color: "#0f172a", margin: "0 0 6px 0" }}>
-                    {r.role}
-                  </h3>
-                  <div style={{ fontSize: "12.5px", fontWeight: "600", color: "#475569", marginBottom: "8px" }}>
-                    {r.title}
-                  </div>
-                  <p style={{ fontSize: "13px", color: "#64748b", lineHeight: "1.5", margin: 0 }}>
-                    {r.desc}
-                  </p>
-                </div>
-
-                <button
-                  onClick={() => onSelectRole && onSelectRole(r.role, r.name)}
-                  style={{
-                    marginTop: "20px",
-                    padding: "11px 16px",
-                    borderRadius: "10px",
-                    background: r.bg,
-                    border: `1px solid ${r.border}`,
-                    color: r.color,
-                    fontSize: "13px",
-                    fontWeight: "700",
-                    cursor: "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between"
-                  }}
-                >
-                  <span>Launch {r.role.split("/")[0].trim()} Workspace</span>
-                  <ArrowUpRight size={16} />
-                </button>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    </section>
+    <span className="play-icon">
+      <span />
+    </span>
   );
 }
 
@@ -311,17 +158,49 @@ const Features = [
 ];
 
 const stats = [
-  { icon: "road", value: "6,420+", label: "Roads Monitored" },
-  { icon: "vehicle", value: "50,000+", label: "Vehicles Tracked" },
-  { icon: "incident", value: "1,248+", label: "Incidents Detected" },
-  { icon: "location", value: "8", label: "States & Districts Covered" },
+  {
+    icon: "road",
+    value: "5,000+",
+    label: "Roads Monitored",
+  },
+  {
+    icon: "vehicle",
+    value: "50,000+",
+    label: "Vehicles Tracked",
+  },
+  {
+    icon: "incident",
+    value: "1,200+",
+    label: "Incidents Detected",
+  },
+  {
+    icon: "location",
+    value: "8",
+    label: "Districts Covered",
+  },
 ];
 
 const steps = [
-  { icon: <Monitor />, title: "Monitor", description: "Collect real-time data" },
-  { icon: <Search />, title: "Detect", description: "Identify risks early" },
-  { icon: <BarChart3 />, title: "Analyze", description: "Assess impact & trends" },
-  { icon: <Megaphone />, title: "Respond", description: "Enable quick action" },
+  {
+    icon: <Monitor />,
+    title: "Monitor",
+    description: "Collect real-time data",
+  },
+  {
+    icon: <Search />,
+    title: "Detect",
+    description: "Identify risks early",
+  },
+  {
+    icon: <BarChart3 />,
+    title: "Analyze",
+    description: "Assess impact & trends",
+  },
+  {
+    icon: <Megaphone />,
+    title: "Respond",
+    description: "Enable quick action",
+  },
 ];
 
 function FeatureIcon({ type }: { type: string }) {
@@ -373,7 +252,9 @@ function KeyFeatures() {
         <div className="kf-stats">
           {stats.map((stat, index) => (
             <div
-              className={`kf-stat ${index !== stats.length - 1 ? "kf-stat-border" : ""}`}
+              className={`kf-stat ${
+                index !== stats.length - 1 ? "kf-stat-border" : ""
+              }`}
               key={stat.label}
             >
               <div className="kf-stat-icon">
@@ -433,7 +314,7 @@ function CTA({ onGetStarted }: { onGetStarted?: () => void }) {
         </div>
 
         <button className="white-btn" onClick={onGetStarted}>
-          Access NERA Enterprise Platform
+          Access NERA Dashboard
           <ArrowRight size={16} />
         </button>
       </div>
@@ -463,7 +344,7 @@ function Footer() {
           </div>
         </div>
 
-        <FooterColumn title="Quick Links" links={["About", "Workspaces", "Features", "Mobile App"]} />
+        <FooterColumn title="Quick Links" links={["About", "Features", "Mobile App"]} />
         <FooterColumn title="Resources" links={["Documentation", "API Reference"]} />
         <FooterColumn title="Legal" links={["Privacy Policy", "Terms of Service"]} />
 
@@ -497,7 +378,7 @@ function FooterColumn({
   links: string[];
 }) {
   return (
-    <div className="footer-links">
+    <div className="footer-column">
       <h4>{title}</h4>
       {links.map((link) => (
         <a href="#" key={link}>
@@ -508,19 +389,28 @@ function FooterColumn({
   );
 }
 
-export default function LandingPage({ onGetStarted, onSelectRole }: LandingPageProps) {
+export default function LandingPage({ onGetStarted }: LandingPageProps) {
   return (
-    <div className="landing-page">
-      <Header onGetStarted={onGetStarted} onSelectRole={onSelectRole} />
-      <Hero onGetStarted={onGetStarted} />
-      <RoleWorkspaces onSelectRole={onSelectRole} />
-      <KeyFeatures />
-      <LiveData />
-      <MobileApp />
-      <Integrations />
-      <Testimonials />
-      <FAQ />
-      <CTA onGetStarted={onGetStarted} />
+    <div className="landing-root">
+      <Header onGetStarted={onGetStarted} />
+      <main>
+        <Hero onGetStarted={onGetStarted} />
+        <KeyFeatures />
+        <div id="live-data">
+          <LiveData />
+        </div>
+        <div id="mobile-app">
+          <MobileApp />
+        </div>
+        <div id="integrations">
+          <Integrations />
+        </div>
+        <Testimonials />
+        <div id="faq">
+          <FAQ />
+        </div>
+        <CTA onGetStarted={onGetStarted} />
+      </main>
       <Footer />
     </div>
   );
